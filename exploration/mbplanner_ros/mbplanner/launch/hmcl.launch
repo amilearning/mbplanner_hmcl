@@ -1,0 +1,39 @@
+<launch>
+  <!-- All settings -->
+  <arg name="robot_name" default="m100"/>
+  <arg name="gazebo_gui_en" default="false"/>
+  <arg name="use_sim_time" default="true"/>
+  <arg name="rviz_en" default="true" />
+  <arg name="launch_prefix" default=""/> <!-- gdb -ex run //args  | xterm -e gdb -args-->
+  <param name="use_sim_time" value="$(arg use_sim_time)"/>
+    <!-- <arg name="odometry_topic" default="$(arg robot_name)/ground_truth/odometry_throttled"/> -->
+    <!-- <arg name="odometry_topic" default="/mavros/local_position/odom"/>   -->
+    <arg name="odometry_topic" default="ground_truth_pose"/>    
+    <!-- <arg name="odometry_topic" default="ov_msckf/odomimu"/>     -->
+    
+  <!-- Config files -->
+  <arg name="mbplanner_config_file" default="$(find mbplanner)/config/mbplanner_config.yaml"/>
+  <arg name="global_planner_config_file" default="$(find global_planner)/config/global_planner_config.yaml"/>
+  <arg name="voxblox_config_file" default="$(find mbplanner)/config/voxblox_sim_config.yaml"/>
+  <arg name="octomap_config_file" default="$(find mbplanner)/config/octomap_sim_config.yaml"/>
+  <arg name="map_config_file" default="$(arg voxblox_config_file)"/>
+  <arg name="world_file" default="$(find planner_gazebo_sim)/worlds/pittsburgh_mine.world"/>
+  <arg name="pci_file" default="$(find mbplanner)/config/planner_control_interface_sim_config.yaml"/>
+
+  
+
+<node pkg="mbplanner" type="mbplanner_node" name="mbplanner_node" output="screen">
+    <remap from="odometry" to="$(arg odometry_topic)" />
+    <remap from="cam0/camera_info" to="/stereo/left/camera_info" />
+    <remap from="cam1/camera_info" to="/stereo/right/camera_info" />
+       
+    
+    <!-- <remap from="pointcloud" to="/velodyne_points" /> -->
+    <remap from="pointcloud" to="/camera/depth/points" />    
+    <rosparam command="load" file="$(arg mbplanner_config_file)" />
+    <rosparam command="load" file="$(arg map_config_file)" />
+  </node>
+
+ 
+
+</launch>

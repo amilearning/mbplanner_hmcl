@@ -1,0 +1,10 @@
+<launch>
+  <!-- All settings -->
+  <arg name="robot_name" default="m100"/>
+
+  
+
+    <node launch-prefix="nice" pkg="rviz" type="rviz" name="rviz" output="screen" args="-d $(find mbplanner)/config/rviz/$(arg robot_name)_sim_mbplanner.rviz" />
+
+
+</launch>
