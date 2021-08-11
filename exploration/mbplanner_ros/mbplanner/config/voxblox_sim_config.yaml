@@ -1,9 +1,9 @@
 world_frame: world
 use_tf_transforms: True
-use_freespace_pointcloud: True
+use_freespace_pointcloud: False
 tsdf_voxels_per_side: 16
 tsdf_voxel_size: 0.20
-max_ray_length_m: 20.0
+max_ray_length_m: 5.0
 truncation_distance: 0.4
 use_sparsity_compensation_factor: True
 sparsity_compensation_factor: 100.0 #10.0
@@ -14,7 +14,7 @@ verbose: False
 use_const_weight: True
 update_mesh_every_n_sec: 1.0
 mesh_min_weight: 1e-4
-slice_level: 1.0
+slice_level: 0.5
 method: "fast"
 publish_slices: False
 publish_pointclouds: True

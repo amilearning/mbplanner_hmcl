@@ -22,24 +22,24 @@ MBParams:
   use_angles: 1  # When this is 1, ax is the direction of acceleration (0-2pi) in the x-y plane, ay is the magnitude
   ax_min: -3.14195
   ay_min: 0
-  az_min: -0.3
+  az_min: -0.1
   ax_max: 3.14195
-  ay_max: 2.0
-  az_max: 0.3
-  v_max: 1.75
-  laser_dist: 1 # (metre), minimum distance to the obstacles using 2d lidar 
+  ay_max: 1.0
+  az_max: 0.1
+  v_max: 1.0
+  laser_dist: 2.0 # (metre), minimum distance to the obstacles using 2d lidar 
  
   
   # Tree generation parameters:
-  use_current_state: 0
+  use_current_state: 1
   exp_dir: 0.0
   t: 1.5
   dt: 0.25
   x_bias: 1
   a_cone: 1.7
-  iterations: 2
-  branch_limit: 4
-  sample_steps: 2
+  iterations: 7 
+  branch_limit: 3
+  sample_steps: 5 
   min_edge_length: 3
   second_lvl_samples: 0
   later_iter_samples: 2 # Open space: 2
@@ -81,7 +81,7 @@ SensorParams:
     center_offset:  [0.1, 0.0, 0.1]
     rotations:      [0.0, 0.0, 0.0]
     fov:            [rad(pi/2), rad(pi/3)]
-    resolution:     [rad(5.0*pi/180), rad(3.0*pi/180)]
+    resolution:     [rad(9.0*pi/180), rad(6.0*pi/180)]
 #-------------------------------------------------------------------------------
 # SAMPLING SPACE CONFIGURATION
 #   Global: Strictly defined bounds for the whole environment.
@@ -90,12 +90,12 @@ SensorParams:
 BoundedSpaceParams:
   Global:
     type:           kCuboid
-    min_val:        [-3.0, -3.0, -0.5]
-    max_val:        [25, 15.0, 2.5]
+    min_val:        [-3.0, -3.0, 0.8]
+    max_val:        [25, 15.0, 3.0]
   Local:
     type:           kCuboid
-    min_val:        [-5.0, -5.0, -1.0]
-    max_val:        [5.0, 5.0, 1.0]
+    min_val:        [-7.0, -7.0, -0.5]
+    max_val:        [7.0, 7.0, 0.5]
     min_extension:  [-1.0, -1.0, 0.0]
     max_extension:  [1.0, 1.0, 0.0]
 #-------------------------------------------------------------------------------

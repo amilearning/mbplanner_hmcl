@@ -85,11 +85,13 @@ class MBTree {
   std::vector<Eigen::Vector3d> getEigenPath(std::vector<StateNode*>);
   std::vector<geometry_msgs::Pose> getPosePath(std::vector<StateNode*>);
   std::vector<geometry_msgs::Pose> getSafetyPath();
+  std::vector<geometry_msgs::Pose> getRandomPath();
   Eigen::Vector3d estimateDirectionFromPath(std::vector<Eigen::Vector3d>);
   Eigen::Vector3d getNextVel();
   void resetExpDir();
   void setGivenVel(Eigen::Vector3d);
   void setSafetyPath(std::vector<StateNode*>);
+  void setRandomPath(std::vector<StateNode*>);
   void setSafetyPath(std::vector<geometry_msgs::Pose>);
   double calculate_curvature(std::vector<StateNode*>);
   void getFreeSpacePointCloud(std::string, StateVec,
@@ -98,6 +100,7 @@ class MBTree {
   void freePointCloudtimerCallback(const ros::TimerEvent& event);
   
   void sampleAccelUsingLaser(Eigen::Vector3d& accl, double theta, StateNode* front_node);     
+  bool inside_lidar_safe_area(StateNode* sampled_node);
   void clusterPaths(std::vector<StateNode*>& clustered_leaves, double dist_threshold = 1.0);
   void getGlobalGraphPaths(std::vector<SerializeVertex>& vertices,
                            std::vector<StateNode*> clustered_leaves);
@@ -147,6 +150,7 @@ class MBTree {
   StateNode root_storage;
   std::shared_ptr<pcl::PointCloud<pcl::PointXYZ>> obs_pcl_;
   std::vector<StateNode*> safe_path_;
+  std::vector<StateNode*> random_path;
   Eigen::Vector3d given_vel_;
 
   bool odometry_ready;

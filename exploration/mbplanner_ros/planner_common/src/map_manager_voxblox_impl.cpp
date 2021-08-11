@@ -182,6 +182,9 @@ float MapManagerVoxblox<SDFServerType, SDFVoxelType>::getVoxelDistance(
   voxblox::LongIndex center_voxel_index = voxblox::getGridIndexFromPoint<voxblox::LongIndex>(
       center.cast<voxblox::FloatingPoint>(), voxel_size_inv);
   SDFVoxelType* voxel = sdf_layer_->getVoxelPtrByGlobalIndex(center_voxel_index);
+  if (voxel == 0x0){
+    return 999;
+  }
   return voxel->distance;
 }
 
@@ -402,7 +405,9 @@ void MapManagerVoxblox<SDFServerType, SDFVoxelType>::getScanStatus(
           VoxelStatus::kOccupied));
       break;
     }
+    
   }
+  // ROS_INFO("#unkown = %d, #occ = %d, #collision = %d",num_unknown_voxels, num_free_voxels,num_occupied_voxels);
   /*std::sort(raycast_unknown_vec_.begin(), raycast_unknown_vec_.end());
   std::sort(raycast_occupied_vec_.begin(), raycast_occupied_vec_.end());
   std::sort(raycast_free_vec_.begin(), raycast_free_vec_.end());

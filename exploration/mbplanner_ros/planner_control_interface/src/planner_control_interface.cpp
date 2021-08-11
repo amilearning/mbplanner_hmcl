@@ -288,7 +288,7 @@ bool PlannerControlInterface::init() {
 void PlannerControlInterface::run() {
   ros::Rate rr(10);  // 10Hz
   bool cont = true;
-  while (cont) {
+  while (cont) {    
     PCIManager::PCIStatus pci_status = pci_manager_->getStatus();
     // TODO: Fix by prioritizing and sequencing exclusive cases (with bad
     // if/else and flags approach)
@@ -318,7 +318,26 @@ void PlannerControlInterface::run() {
                                            ? "kAuto"
                                            : "kManual")
                         << ")");
-        runPlanner(exe_path_en_);
+        
+        // If position is close to the last point of the current_pose, re plan it 
+        // or time out reached 
+        if(current_path_.size() > 0){
+            double dist_ = hypot((current_path_.back().position.x - current_pose_.position.x),(current_path_.back().position.y - current_pose_.position.y));
+            if (dist_ < 0.3){
+              ROS_INFO_STREAM("Approach to the end of trajectory, request new path");
+              runPlanner(exe_path_en_);    
+            }            
+            // diff_duration = ros::Time::now() - plan_last_activate_time_;
+            // if (diff_duration.toSec() > 100){
+            //   ROS_INFO_STREAM("It has been a while since last planned trajectory, activate new plan");
+            //   runPlanner(exe_path_en_);
+            // }
+        }
+        else{
+          // If there is no current path, run planner anyway 
+          ROS_INFO_STREAM("no plan executing, request new path");
+          runPlanner(exe_path_en_);
+        }        
       } else if (global_request_) {
         global_request_ = false;
         ROS_INFO("Request the global planner.");
@@ -363,7 +382,7 @@ void PlannerControlInterface::runPlanner(bool exe_path = false) {
   const int kBBoxLevel = 3;
   bool success = false;
   bool stop = false;
-
+  
   for (int ind = 0; ind < kBBoxLevel; ++ind) {
     ros::Duration(0.01).sleep();  // sleep to unblock the thread to get latest cmd.
     ros::spinOnce();
@@ -400,9 +419,11 @@ void PlannerControlInterface::runPlanner(bool exe_path = false) {
             v_current_ = pci_manager_->getVelocity(path_type);
             // Publish the status
             publishPlannerStatus(plan_srv.response, true);
+            ROS_INFO("execute with");
             pci_manager_->executePath(plan_srv.response.path, path_to_be_exe, path_type);
             success = true;
             current_path_ = path_to_be_exe;
+            plan_last_activate_time_ = ros::Time::now();
           } else if (ind < (kBBoxLevel - 1)) {
             publishPlannerStatus(plan_srv.response, false);
             ROS_WARN("Attemp to re-plan with smaller bound.");
@@ -475,13 +496,24 @@ void PlannerControlInterface::runInitialization() {
 geometry_msgs::Pose PlannerControlInterface::getPoseToStart() {
   geometry_msgs::Pose ret;
   // use current state as default
-  ret.position.x = 0.0;
-  ret.position.y = 0.0;
-  ret.position.z = 0.0;
+  if(pose_is_ready_){
+  ret.position.x = current_pose_.position.x;
+  ret.position.y = current_pose_.position.y;
+  ret.position.z = current_pose_.position.z;
+  ret.orientation.x = current_pose_.orientation.x;
+  ret.orientation.y = current_pose_.orientation.y;
+  ret.orientation.z = current_pose_.orientation.z;
+  ret.orientation.w = current_pose_.orientation.w;  
+  }
+  else{
+  ret.position.x =0.0;
+  ret.position.y =0.0;
+  ret.position.z =0.0;
   ret.orientation.x = 0.0;
   ret.orientation.y = 0.0;
   ret.orientation.z = 0.0;
-  ret.orientation.w = 1.0;
+  ret.orientation.w = 1.0;  
+  }
 
   // Use the last waypoint as a starting pose if required to plan ahead
   if (pci_manager_->planAhead() && (current_path_.size())) ret = current_path_.back();

@@ -437,7 +437,7 @@ void TsdfServer::lidar_inserPointcloud(
         laser_pointcloud->header.frame_id,
         "/base_link",
         laser_pointcloud->header.stamp + ros::Duration().fromSec(laser_pointcloud->ranges.size()*laser_pointcloud->time_increment),
-        ros::Duration(0.2))){
+        ros::Duration(0.5))){
           ROS_INFO("no such transform from lidar to base link");
      return;
   }

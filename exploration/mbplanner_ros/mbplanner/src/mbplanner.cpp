@@ -271,6 +271,26 @@ bool MBPlanner::plannerServiceCallback(planner_msgs::planner_srv::Request& req,
         return true;
       }
     } else{
+      ROS_INFO("Random safe path is used");
+       std::vector<geometry_msgs::Pose> path =  mbtree_->getRandomPath();
+    int count = 0;
+    for (geometry_msgs::Pose p : path) {
+      count++;
+      if (count == path.size()) {
+        if ((Eigen::Vector3d(p.position.x, p.position.y, p.position.z) -
+             Eigen::Vector3d::Zero())
+                .norm() < 0.001) {
+          path.erase(path.end());
+        }
+      }
+    }
+    res.path = path;
+    mbtree_->printTimes();
+    mbtree_->publishLogInfo();
+    if(path.size()>0){
+    ROS_INFO("LOCAL PLANNER SUCCESSFULLY FOUND Safe PATH");
+     return true;
+    }
      ROS_INFO("Planner returned empty tree, no previous path found, just safety path enabled.. do we have safety path?");
       return false;
     }      

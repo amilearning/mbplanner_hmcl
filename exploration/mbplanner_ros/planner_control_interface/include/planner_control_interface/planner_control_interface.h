@@ -101,6 +101,9 @@ class PlannerControlInterface {
 
   int planner_iteration_;
   geometry_msgs::Pose current_pose_;
+  ros::Time plan_last_activate_time_;  
+  ros::Duration diff_duration;
+  
   std::string world_frame_id_;
 
   void odometryCallback(const nav_msgs::Odometry &odo);

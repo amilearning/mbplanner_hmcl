@@ -29,7 +29,7 @@
     <!-- <remap from="global_planner_node/esdf_map_in" to="mbplanner_node/esdf_map_out"/> -->
     <!--  -->
     <!-- For Octomap: -->
-    <remap from="input_octomap" to="mbplanner_node/octomap_binary"/>
+    <!-- <remap from="input_octomap" to="mbplanner_node/octomap_binary"/> -->
     <!--  -->
     <rosparam command="load" file="$(arg global_planner_config_file)" />
     <rosparam command="load" file="$(arg map_config_file)" />

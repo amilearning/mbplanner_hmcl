@@ -111,6 +111,8 @@ void MBTree::resetExpDir() { exploring_direction_ = mb_params_.exp_dir; }
 
 void MBTree::setSafetyPath(std::vector<StateNode*> new_path) { safe_path_ = new_path; }
 
+void MBTree::setRandomPath(std::vector<StateNode*> new_path) { random_path = new_path; }
+
 void MBTree::setSafetyPath(std::vector<geometry_msgs::Pose> new_path) {
   std::vector<StateNode*> new_safety_path;
   for (int i = 0; i < new_path.size(); i++) {
@@ -133,6 +135,10 @@ void MBTree::sampleAccelUsingLaser(Eigen::Vector3d& accl, double theta, StateNod
   double ax;
   double ay;
   double az = (*distribution_z_)(gen_);   
+  double mag = (*distribution_y_)(gen_);  
+  ax = mag * cos(theta);
+  ay = mag * sin(theta);     
+  if(false){  
   // if(!tf_listener_.waitForTransform(
   //       laser_data.header.frame_id,
   //       "/base_link",
@@ -145,37 +151,64 @@ void MBTree::sampleAccelUsingLaser(Eigen::Vector3d& accl, double theta, StateNod
   //     ay = mag * sin(theta);     
   // }else{  
     // theta is sampled in local frame  & thetha_in_global is in global frame 
+ 
   double theta_in_global = theta + current_state_.yaw;
   truncateYaw(theta_in_global);
   //extract the distance to object in sampled angle in local frame 
-  int idx = round((theta-laser_data.angle_min)/laser_data.angle_increment);
+  int idx = (int)((theta-laser_data.angle_min)/laser_data.angle_increment);
   double d1 = laser_data.ranges[idx];
+  
   if( laser_data.range_min > d1 || d1 > laser_data.range_max){
     d1 = laser_data.range_max;
-  }
+  } 
   double d2 = sqrt(pow((current_state_.position(0)-front_node->position(0)),2)+pow((current_state_.position(1)-front_node->position(1)),2));   
-  front_node->yaw = atan2((front_node->position(1) - current_state_.position(1)),(front_node->position(0) - current_state_.position(0)));
+  front_node->yaw = atan2((front_node->position(1) - current_state_.position(1)),(front_node->position(0) - current_state_.position(0))); 
   // find the distance to obstacle from front_node 
-  double dist_to_obst = sqrt(pow(d1,2)+pow(d2,2)-2*d1*d2*cos(front_node->yaw - theta_in_global));
-  
+  double dist_to_obst = sqrt(pow(d1,2)+pow(d2,2)-2*d1*d2*cos(front_node->yaw - theta_in_global));  
   Eigen::Vector3d obst_pose(d1*cos(theta_in_global),d1*sin(theta_in_global),0);
   // angle from front_node to obst point. (use this angle to sample another acceleration)
   double sampled_angle = atan2(obst_pose(1)-front_node->position(1), obst_pose(0)-front_node->position(0));
-  truncateYaw(sampled_angle);
+  truncateYaw(sampled_angle);  
   // dist_to_obst - mb_params.laser_dist > current_velocity*T_c + sampled_accl*T_c^2 /2 
-  double max_accel = (dist_to_obst - mb_params_.laser_dist - current_state_.velocities.norm()*mb_params_.t)*2/pow(mb_params_.t,2);  
+  double max_accel = std::max(0.0,(dist_to_obst - mb_params_.laser_dist - current_state_.velocities.norm()*mb_params_.t)*2/pow(mb_params_.t,2));    
   distribution_y_.reset(new std::uniform_real_distribution<>(mb_params_.ay_min, std::min(max_accel,mb_params_.ay_max)));  // sampled Mag with lidar data in mind 
   double mag = (*distribution_y_)(gen_); 
   ax = mag * cos(sampled_angle);
   ay = mag * sin(sampled_angle);  
   // (optinal) we may add additional accerlation vector to sample lidar-obstacle free area    
   // }  
+  }
   accl(0)= ax;
   accl(1)= ay;
-  accl(2)= az;  
+  accl(2)= az;
+  
+  
   return;
 }
 
+
+bool MBTree::inside_lidar_safe_area(StateNode* sampled_node){
+  double angle_in_global = atan2(sampled_node->position(1)-current_state_.position(1), sampled_node->position(0)-current_state_.position(0));  
+  double angle_in_local_frame = angle_in_global- current_state_.yaw;
+  int idx = (int)((angle_in_local_frame-laser_data.angle_min)/laser_data.angle_increment);
+  double d1 = laser_data.range_max;
+  if(isfinite(laser_data.ranges[idx])){
+     d1 =laser_data.ranges[idx] ;  
+  }
+  
+  
+  if( laser_data.range_min > d1 || d1 > laser_data.range_max){
+    d1 = laser_data.range_max;    
+  }
+  double distance_to_sampled_node = sqrt(pow((current_state_.position(0)-sampled_node->position(0)),2)+pow((current_state_.position(1)-sampled_node->position(1)),2));   
+  if (distance_to_sampled_node > d1 || fabs(d1 - distance_to_sampled_node) < mb_params_.laser_dist){
+    return false;
+  }else{
+    return true;
+  }
+ 
+  
+}
 
 int MBTree::buildTree(bool prev_point_plan, bool use_current_state, bool use_given_vel) {
   /*
@@ -331,33 +364,80 @@ int MBTree::buildTree(bool prev_point_plan, bool use_current_state, bool use_giv
       // Sample "current_sample_steps" number of samples -- Branches 
       for (int c = 0; c < current_sample_steps; c++) {
         double ax, ay, az;
-        Eigen::Vector3d a(ax,ay,az);
-        if (iteration_count >= 1) {         
-            if (first_sample) {
-              first_sample = false;
-              ax = q.front()->acceleration(0);
-              ay = q.front()->acceleration(1);
-              az = q.front()->acceleration(2);
-              a(0)=ax; a(1) = ay; a(2) = az;
-            } else {
-                double theta = (*distribution_x_)(gen_);         
-                sampleAccelUsingLaser(a,theta,q.front());                
-                // double mag = (*distribution_y_)(gen_);
-                // ax = mag * cos(theta);
-                // ay = mag * sin(theta);
-                // az = (*distribution_z_)(gen_);
-            }          
-        } else { // initial root 
-          if (exp_dir_samples > 0) {            
-            sampleAccelUsingLaser(a,exploring_direction_ + exp_delta,q.front());      
-            
-            exp_delta = exp_delta + exp_d_theta;
-            exp_dir_samples--;
-          } else {
-            double theta = (*distribution_x_)(gen_);         
-            sampleAccelUsingLaser(a,theta,q.front());                     
-          }
-        }        
+          if (iteration_count >= 1) {
+                if (iteration_count <= mb_params_.branch_limit) {
+                  if (first_sample) {
+                    first_sample = true;
+                    ax = q.front()->acceleration(0);
+                    ay = q.front()->acceleration(1);
+                    az = q.front()->acceleration(2);
+                  } else {
+                    if (mb_params_.use_angles == 0) {
+                      ax = (*distribution_x_)(gen_);
+                      ay = (*distribution_y_)(gen_);
+                      az = (*distribution_z_)(gen_);
+                    } else {
+                      double theta = (*distribution_x_)(gen_);
+                       if(theta == 0){
+                        theta =0.02;
+                      }
+                      double mag = (*distribution_y_)(gen_);
+                      ax = mag * cos(theta);
+                      ay = mag * sin(theta);
+                      az = (*distribution_z_)(gen_);
+                    }
+                  }
+                } else {
+                  if (mb_params_.use_angles == 0) {
+                    ax = (*distribution_x_)(gen_);
+                    ay = (*distribution_y_)(gen_);
+                    az = (*distribution_z_)(gen_);
+                  } else {
+                    double theta = (*distribution_x_)(gen_);
+                     if(theta == 0){
+                        theta =0.02;
+                      }
+                    double mag = (*distribution_y_)(gen_);
+                    // truncate_yaw(theta);
+                    ax = mag * cos(theta);
+                    ay = mag * sin(theta);
+                    az = (*distribution_z_)(gen_);
+                  }
+                  current_sample_steps = 1;
+                }
+              } else {
+                if (exp_dir_samples > 0) {
+                  double theta = exploring_direction_ + exp_delta + exp_d_theta;
+                  if (mb_params_.use_angles == 0) {
+                    ax = mb_params_.ax_max * cos(exploring_direction_ + exp_delta);
+                    ay = mb_params_.ay_max * sin(exploring_direction_ + exp_delta);
+                  } else {
+                    ax = mb_params_.ay_max * cos(exploring_direction_ + exp_delta);
+                    ay = mb_params_.ay_max * sin(exploring_direction_ + exp_delta);
+                  }
+                  az = (*distribution_z_)(gen_);
+                  exp_delta = exp_delta + exp_d_theta;
+                  exp_dir_samples--;
+                } else {
+                  if (c == mb_params_.sample_steps - 1 && mb_params_.x_bias > 0) {
+                    ax = mb_params_.ay_max;
+                    ay = 0.0;
+                    az = (*distribution_z_)(gen_);
+                  } else {
+                      double theta = (*distribution_x_)(gen_);
+                      double mag = (*distribution_y_)(gen_);
+                      if(theta == 0){
+                        theta =0.02;
+                      }
+                      ax = mag * cos(theta);
+                      ay = mag * sin(theta);
+                   
+                    az = (*distribution_z_)(gen_);
+                  }
+                }
+              }
+         Eigen::Vector3d a(ax, ay, az); 
+
         
         double t_c;  // Just in case if this needs to be variable in the future
         t_c = mb_params_.t;
@@ -393,39 +473,53 @@ int MBTree::buildTree(bool prev_point_plan, bool use_current_state, bool use_giv
                               0.5 * mb_params_.dt * mb_params_.dt * a;
           // Is the state within the local and global bounding box:
           if (!inside_global_box(d_state->position)) {
+            ROS_INFO("git global box");
             hit = true;
             break;
           }
           if (!inside_local_box(d_state->position)) {
+            ROS_INFO("git local box");
             hit = true;
             break;
           }
-
+     
+           //Lidar Collision check 
+          if (!inside_lidar_safe_area(d_state)){
+            hit = true;
+            ROS_INFO("hit by lidar");
+            break;
+          }
+           
           // Collision check:
-          // explorer::MapManager::VoxelStatus voxel_state =
-          //     map_manager_->getBoxStatus(d_state->position, robot_params_.size, false);
-          // if (voxel_state == explorer::MapManager::VoxelStatus::kOccupied)  // Collision
-          // {
-          //   col_bad_samples++;
-          //   if (k < mb_params_.min_edge_length) hit = true;
-          //   break;
-          // } else if (voxel_state == explorer::MapManager::VoxelStatus::kUnknown) {
-          //   unknown_bad_samples++;
-          //   if (iter < mb_params_.iterations - 1)
-          //     if (k < mb_params_.min_edge_length) hit = true;
-          //   break;
-          // }  // Went into unexplored environment
+          explorer::MapManager::VoxelStatus voxel_state =
+                  map_manager_->getBoxStatus(d_state->position, robot_params_.size, false);
+              if (voxel_state == explorer::MapManager::VoxelStatus::kOccupied)  // Collision
+              { 
+                col_bad_samples++;
+                if (k < mb_params_.min_edge_length) hit = true;                
+                break;
+              } else if (voxel_state == explorer::MapManager::VoxelStatus::kUnknown) {
+                unknown_bad_samples++;
+                // if (iter < mb_params_.iterations - 1)
+                  // if (k < mb_params_.min_edge_length) hit = true;
+                // break;
+              }  // Went into unexplored environment
+          
           // In free space
           curve_dist += (prev_d_state->position - d_state->position).norm();
 
           d_state->dist_to_vertex = prev_d_state->dist_to_vertex +
                                     (prev_d_state->position - d_state->position).norm();
           d_state->acceleration = a;
+         // EDITED
+          if(hit){
+            break;
+          }
           if (k < (int)(t_c / mb_params_.dt) - 1) temp_inter_state_tree_.push_back(d_state);
           prev_d_state = (d_state);
         }
 
-        // Had collision:
+        // // Had collision:
         // if (hit) {
         //   first_sample = false;
         //   temp_inter_state_tree_.clear();
@@ -463,7 +557,6 @@ int MBTree::buildTree(bool prev_point_plan, bool use_current_state, bool use_giv
             first_sample = false;
             temp_inter_state_tree_.clear();
             c--;
-            ROS_INFO("c --");
             dist_bad_samples++;
             total_bad_samples++;
             dist_bad_samples_display++;
@@ -512,11 +605,15 @@ int MBTree::buildTree(bool prev_point_plan, bool use_current_state, bool use_giv
     }  // while(n>0)
     if (good_samples > 0) iteration_count++;
     iter++;
+    
   }  // while(iteration_count < mb_params_.iterations)
-
+ 
+  
+      
   stat_->build_tree_time = GET_ELAPSED_TIME(tim);
 
   // Visualize tree
+  ROS_INFO("initialize tree visualization");
   visualizer_->visualizeMBTree(tree_root_);
   return tree_size;
 }
@@ -595,7 +692,7 @@ bool MBTree::evaluateGraph() {
     gstatus = false;
     return gstatus;
   }
-
+ 
   // Gain evaluation for valid paths, starting from the leaf to the root.
 
   double best_gain = 0;
@@ -609,9 +706,11 @@ bool MBTree::evaluateGraph() {
 
     std::vector<StateNode*> path;
     path = getShortestPath(leaf_vertices_[i], false);
-
+    
     int path_size = path.size();
     if (path_size > 1) {
+        
+    
       // At least 2 vertices: root + leaf.
       double path_gain = 0;
       double lambda = mb_params_.path_length_penalty;
@@ -629,7 +728,7 @@ bool MBTree::evaluateGraph() {
           if (curr_vert_dist < min_vert_dist) min_vert_dist = curr_vert_dist;
         }
       }
-
+      
       /* Min Path Length Check (min 1.0m) */
       if (path_length <= mb_params_.min_path_length) continue;
 
@@ -652,10 +751,10 @@ bool MBTree::evaluateGraph() {
 
       /* Safety Path Calc and Viz */
       leaf_vertices_[i]->obst_steps = predict_hit((leaf_vertices_[i]));
-      if (leaf_vertices_[i]->obst_steps < 0)
-        path_gain = 0.0;
-      else
-        safe_leaves.push_back(leaf_vertices_[i]);
+      // if (leaf_vertices_[i]->obst_steps < 0)
+      //   path_gain = 0.0;
+      // else
+      //   safe_leaves.push_back(leaf_vertices_[i]);
 
       /**** Path Direction ****/
       double lambda2 = mb_params_.path_direction_penalty;
@@ -677,7 +776,7 @@ bool MBTree::evaluateGraph() {
       path_gain *= exp(-lambda2 * std::abs(dyaw));
 
       leaf_vertices_[i]->final_gain = path_gain;
-
+      
       if (path_gain > best_gain) {
         best_gain = path_gain;
         best_path_leaf = leaf_vertices_[i];
@@ -686,6 +785,7 @@ bool MBTree::evaluateGraph() {
     }  // if(path_size > 1)
 
   }  // loop over all leaves
+
   if (num_leaf_vertices_ == 1) {
     best_path_leaf = leaf_vertices_[0];
     best_gain = leaf_vertices_[0]->vol_gain.gain;
@@ -1028,10 +1128,10 @@ int MBTree::predict_hit(StateNode* leaf) {
       hit = true;
       break;
     }
-    if (voxel_state == explorer::MapManager::VoxelStatus::kUnknown) {
-      hit = true;
-      break;
-    }
+    // if (voxel_state == explorer::MapManager::VoxelStatus::kUnknown) {
+    //   hit = true;
+    //   break;
+    // }
     v_norm = d_state->velocities.norm();
     temp_path.push_back(d_state);
     prev_d_state = d_state;
@@ -1200,9 +1300,8 @@ void MBTree::computeVolumetricGainRayModel(StateVec& state, VolumetricGain& vgai
 
   std::vector<std::tuple<int, int, int>> gain_log;
   std::vector<std::pair<Eigen::Vector3d, explorer::MapManager::VoxelStatus>> voxel_log;
-  int raw_unk_voxels_count = 0;
-
-  for (int ind = 0; ind < mb_params_.exp_sensor_list.size(); ++ind) {
+  int raw_unk_voxels_count = 0;  
+  for (int ind = 0; ind < mb_params_.exp_sensor_list.size(); ++ind) {   
     std::string sensor_name = mb_params_.exp_sensor_list[ind];
     // Refine the bound within an effective range.
     for (int i = 0; i < 3; i++) {
@@ -1228,16 +1327,18 @@ void MBTree::computeVolumetricGainRayModel(StateVec& state, VolumetricGain& vgai
       if (vs == explorer::MapManager::VoxelStatus::kUnknown) ++raw_unk_voxels_count;
       int j = 0;
       for (j = 0; j < 3; j++) {
-        if ((voxel[j] < bound_min[j]) || (voxel[j] > bound_max[j])) break;
+        if ((voxel[j] < bound_min[j]) || (voxel[j] > bound_max[j])){
+            break;
+        } 
       }
       if (j == 3) {
         // valid voxel.
         if (vs == explorer::MapManager::VoxelStatus::kUnknown) {
-          ++num_unknown_voxels;
+          ++num_unknown_voxels;       
         } else if (vs == explorer::MapManager::VoxelStatus::kFree) {
-          ++num_free_voxels;
+          ++num_free_voxels;          
         } else if (vs == explorer::MapManager::VoxelStatus::kOccupied) {
-          ++num_occupied_voxels;
+          ++num_occupied_voxels;          
         } else {
           ROS_ERROR("Unsupported voxel type.");
         }
@@ -1269,7 +1370,11 @@ void MBTree::computeVolumetricGainRayModel(StateVec& state, VolumetricGain& vgai
     vgain.gain += num_unknown_voxels * mb_params_.unknown_voxel_gain +
                   num_free_voxels * mb_params_.free_voxel_gain +
                   num_occupied_voxels * mb_params_.occupied_voxel_gain;
+
+
+
   }
+  
 }
 
 std::vector<StateNode*> MBTree::findLeafVertices() {
@@ -1519,6 +1624,29 @@ Eigen::Vector3d MBTree::estimateDirectionFromPath(std::vector<Eigen::Vector3d> p
   }
   return path_dir;
 }
+
+std::vector<geometry_msgs::Pose> MBTree::getRandomPath() {
+  std::vector<geometry_msgs::Pose> rand_path;
+  for (int i = 0; i < random_path.size(); i++) {
+    geometry_msgs::Pose p;
+    p.position.x = random_path[i]->position(0);
+    p.position.y = random_path[i]->position(1);
+    p.position.z = random_path[i]->position(2);
+    // double yaw = atan2(random_path[i]->velocities(1),
+    // random_path[i]->velocities(0));
+    double yaw = current_state_.yaw;
+    tf::Quaternion quat;
+    quat.setEuler(0.0, 0.0, yaw);
+    p.orientation.x = quat[0];
+    p.orientation.y = quat[1];
+    p.orientation.z = quat[2];
+    p.orientation.w = quat[3];
+
+    rand_path.push_back(p);
+  }
+  return rand_path;
+}
+
 
 std::vector<geometry_msgs::Pose> MBTree::getSafetyPath() {
   std::vector<geometry_msgs::Pose> safe_path;
