@@ -247,7 +247,7 @@ void TsdfServer::processPointCloudMessageAndInsert(
      double horizontal_fov = 100;
      double vertical_fov = 80;
      double near_plane_dist = 0.2;
-     double far_plane_dist = 3.0;
+     double far_plane_dist = 5.0;
      ////////////////////////////////////////////////////////////////////
   // Convert differently depending on RGB or I type.
   if(!lidar_source){
@@ -316,7 +316,7 @@ void TsdfServer::processPointCloudMessageAndInsert(
     pcl::fromROSMsg(pcd_from_lidar, *lidar_cloud_tmp);
     tf::StampedTransform lidar_to_world;
     try {      
-      tf_listener_.waitForTransform("/world", pcd_from_lidar.header.frame_id,pcd_from_lidar.header.stamp ,ros::Duration(0.3));
+      tf_listener_.waitForTransform("/world", pcd_from_lidar.header.frame_id,pcd_from_lidar.header.stamp ,ros::Duration(0.5));
       tf_listener_.lookupTransform("/world", pcd_from_lidar.header.frame_id, pcd_from_lidar.header.stamp ,lidar_to_world);
     } catch (tf::TransformException& ex) {
     ROS_INFO("laser frame got delayed");
@@ -450,16 +450,16 @@ void TsdfServer::lidar_inserPointcloud(
 void TsdfServer::insertPointcloud(
     const sensor_msgs::PointCloud2::Ptr& pointcloud_msg_in) {
 ///////// Insert point cloud from lidar ////    
-  if (pcd_from_lidar.header.stamp - last_msg_time_ptcloud_ >
+  if (pcd_from_lidar.header.stamp - last_laser_msg_time_ptcloud_ >
       min_time_between_msgs_ && !pcd_from_lidar.data.empty() && lidar_sub_done) {
-    last_msg_time_ptcloud_ = pcd_from_lidar.header.stamp;   
+    last_laser_msg_time_ptcloud_ = pcd_from_lidar.header.stamp;     
     sensor_msgs::PointCloud2::Ptr pcd_from_lidar_ptr( new sensor_msgs::PointCloud2( pcd_from_lidar ) );     
     
     
 
     
-    Transformation T_G_C;
-    processPointCloudMessageAndInsert(pcd_from_lidar_ptr, T_G_C,
+    Transformation T_G_C_lidar;
+    processPointCloudMessageAndInsert(pcd_from_lidar_ptr, T_G_C_lidar,
                                       false,true);
     // pointcloud_queue_.push(pcd_from_lidar_ptr);
     pcd_from_lidar.data.clear();
@@ -467,7 +467,6 @@ void TsdfServer::insertPointcloud(
     }    
 /////////////
 
-      
   if (pointcloud_msg_in->header.stamp - last_msg_time_ptcloud_ >
       min_time_between_msgs_) {
     last_msg_time_ptcloud_ = pointcloud_msg_in->header.stamp;
