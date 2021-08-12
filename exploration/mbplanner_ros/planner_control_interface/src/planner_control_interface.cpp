@@ -323,15 +323,15 @@ void PlannerControlInterface::run() {
         // or time out reached 
         if(current_path_.size() > 0){
             double dist_ = hypot((current_path_.back().position.x - current_pose_.position.x),(current_path_.back().position.y - current_pose_.position.y));
-            if (dist_ < 0.3){
+            if (dist_ < 0.5){
               ROS_INFO_STREAM("Approach to the end of trajectory, request new path");
               runPlanner(exe_path_en_);    
             }            
-            // diff_duration = ros::Time::now() - plan_last_activate_time_;
-            // if (diff_duration.toSec() > 100){
-            //   ROS_INFO_STREAM("It has been a while since last planned trajectory, activate new plan");
-            //   runPlanner(exe_path_en_);
-            // }
+            diff_duration = ros::Time::now() - plan_last_activate_time_;
+            if (diff_duration.toSec() > 100){
+              ROS_INFO_STREAM("It has been a while since last planned trajectory, activate new plan");
+              runPlanner(exe_path_en_);
+            }
         }
         else{
           // If there is no current path, run planner anyway 
