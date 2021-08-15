@@ -17,9 +17,9 @@ MapManagerVoxblox<voxblox::EsdfServer, voxblox::EsdfVoxel>::getSDFLayer() {
 
 template <typename SDFServerType, typename SDFVoxelType>
 MapManagerVoxblox<SDFServerType, SDFVoxelType>::MapManagerVoxblox(
-    const ros::NodeHandle& nh, const ros::NodeHandle& nh_private)
-    : MapManager(nh, nh_private),
-      sdf_server_(nh, nh_private),
+    const ros::NodeHandle& nh, const ros::NodeHandle& nh_private, const ros::NodeHandle& nh_map)
+    : MapManager(nh, nh_private,nh_map),
+      sdf_server_(nh, nh_private,nh_map),
       occupancy_distance_voxelsize_factor_(1.0F) {
   sdf_layer_ = getSDFLayer();
   CHECK_NOTNULL(sdf_layer_);

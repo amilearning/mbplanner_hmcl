@@ -7,9 +7,9 @@ namespace explorer {
 
 MBPlanner::~MBPlanner() {}
 
-MBPlanner::MBPlanner(const ros::NodeHandle& nh, const ros::NodeHandle& nh_private)
-    : nh_(nh), nh_private_(nh_private) {
-  mbtree_ = new mbplanner::MBTree(nh, nh_private);
+MBPlanner::MBPlanner(const ros::NodeHandle& nh, const ros::NodeHandle& nh_private,const ros::NodeHandle& nh_map)
+    : nh_(nh), nh_private_(nh_private),nh_map_(nh_map) {
+  mbtree_ = new mbplanner::MBTree(nh, nh_private,nh_map);
 
   planner_service_ =
       nh_.advertiseService("mbplanner", &MBPlanner::plannerServiceCallback, this);
@@ -17,7 +17,7 @@ MBPlanner::MBPlanner(const ros::NodeHandle& nh, const ros::NodeHandle& nh_privat
       nh_.advertiseService("planner_set_vel", &MBPlanner::setVelCb, this);
 
   odometry_subscriber_ = nh_.subscribe("odometry", 10, &MBPlanner::odometryCallback, this);
-  laser_sub = nh_.subscribe("/laser/scan", 10, &MBPlanner::laserCallback, this);
+  laser_sub = nh_map_.subscribe("/laser/scan", 10, &MBPlanner::laserCallback, this);
   
   this->planning_from_prev_node = false;
   this->first_plan = true;

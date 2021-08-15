@@ -108,7 +108,7 @@ namespace explorer {
 template <typename SDFServerType, typename SDFVoxelType>
 class MapManagerVoxblox : MapManager {
  public:
-  MapManagerVoxblox(const ros::NodeHandle& nh, const ros::NodeHandle& nh_private);
+  MapManagerVoxblox(const ros::NodeHandle& nh, const ros::NodeHandle& nh_private, const ros::NodeHandle& nh_map);
 
   double getResolution() const;
   bool getStatus() const;

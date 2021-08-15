@@ -4,9 +4,10 @@
 int main(int argc, char** argv) {
   ros::init(argc, argv, "global_planner_node");
   ros::NodeHandle nh;
+  ros::NodeHandle nh_map;
   ros::NodeHandle nh_private("~");
 
-  explorer::GPManager global_planner(nh, nh_private);
+  explorer::GPManager global_planner(nh, nh_private,nh_map);
 
   ros::spin();
 

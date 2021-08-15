@@ -6,14 +6,14 @@ find the exploration gain for all the paths and get the best path */
 namespace explorer {
 namespace mbplanner {
 
-MBTree::MBTree(const ros::NodeHandle& nh, const ros::NodeHandle& nh_private)
-    : nh_(nh), nh_private_(nh_private) {
+MBTree::MBTree(const ros::NodeHandle& nh, const ros::NodeHandle& nh_private,const ros::NodeHandle& nh_map)
+    : nh_(nh), nh_private_(nh_private), nh_map_(nh_map){
 #ifdef USE_OCTOMAP
   map_manager_ = new explorer::MapManagerOctomap(nh, nh_private);
 #else
   map_manager_ =
       new explorer::MapManagerVoxblox<explorer::MapManagerVoxbloxServer,
-                                      explorer::MapManagerVoxbloxVoxel>(nh, nh_private);
+                                      explorer::MapManagerVoxbloxVoxel>(nh, nh_private,nh_map);
 #endif
 
   // kd trees for the motion primitive tree and gain calculation

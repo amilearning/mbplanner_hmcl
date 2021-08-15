@@ -50,7 +50,7 @@ namespace mbplanner {
 
 class MBTree {
  public:
-  MBTree(const ros::NodeHandle& nh, const ros::NodeHandle& nh_private);
+  MBTree(const ros::NodeHandle& nh, const ros::NodeHandle& nh_private,const ros::NodeHandle& nh_map);
   ~MBTree();
   void reset();  // Empty state_tree
   void deleteTree(StateNode*);
@@ -110,6 +110,7 @@ class MBTree {
 
  private:
   ros::NodeHandle nh_;
+  ros::NodeHandle nh_map_;
   ros::NodeHandle nh_private_;
 
   // Parameters:

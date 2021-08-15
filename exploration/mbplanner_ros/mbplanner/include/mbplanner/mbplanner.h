@@ -14,7 +14,9 @@ namespace explorer {
 class MBPlanner {
  private:
   ros::NodeHandle nh_;
+  ros::NodeHandle nh_map_;
   ros::NodeHandle nh_private_;
+  
   ros::ServiceServer planner_service_;
   ros::ServiceServer planner_set_vel_service_;
 
@@ -44,7 +46,7 @@ class MBPlanner {
                 planner_msgs::planner_set_vel::Response& res);
 
  public:
-  MBPlanner(const ros::NodeHandle& nh, const ros::NodeHandle& nh_private);
+  MBPlanner(const ros::NodeHandle& nh, const ros::NodeHandle& nh_private,const ros::NodeHandle& nh_map);
   ~MBPlanner();
 };
 

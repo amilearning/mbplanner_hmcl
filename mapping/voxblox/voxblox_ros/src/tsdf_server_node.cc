@@ -6,9 +6,10 @@ int main(int argc, char** argv) {
   google::ParseCommandLineFlags(&argc, &argv, false);
   google::InstallFailureSignalHandler();
   ros::NodeHandle nh;
+  ros::NodeHandle nh_map;
   ros::NodeHandle nh_private("~");
 
-  voxblox::TsdfServer node(nh, nh_private);
+  voxblox::TsdfServer node(nh, nh_private,nh_map);
 
   ros::spin();
   return 0;

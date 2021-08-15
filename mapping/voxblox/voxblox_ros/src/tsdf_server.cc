@@ -8,18 +8,21 @@
 namespace voxblox {
 
 TsdfServer::TsdfServer(const ros::NodeHandle& nh,
-                       const ros::NodeHandle& nh_private)
-    : TsdfServer(nh, nh_private, getTsdfMapConfigFromRosParam(nh_private),
+                       const ros::NodeHandle& nh_private,
+                       const ros::NodeHandle& nh_map)
+    : TsdfServer(nh, nh_private, nh_map, getTsdfMapConfigFromRosParam(nh_private),
                  getTsdfIntegratorConfigFromRosParam(nh_private),
                  getMeshIntegratorConfigFromRosParam(nh_private)) {}
 
 TsdfServer::TsdfServer(const ros::NodeHandle& nh,
                        const ros::NodeHandle& nh_private,
+                       const ros::NodeHandle& nh_map,
                        const TsdfMap::Config& config,
                        const TsdfIntegratorBase::Config& integrator_config,
                        const MeshIntegratorConfig& mesh_config)
     : nh_(nh),
       nh_private_(nh_private),
+      nh_map_(nh_map),
       verbose_(true),
       world_frame_("world"),
       icp_corrected_frame_("icp_corrected"),
@@ -59,7 +62,7 @@ TsdfServer::TsdfServer(const ros::NodeHandle& nh,
   pointcloud_sub_ = nh_.subscribe("pointcloud", pointcloud_queue_size_,
                                   &TsdfServer::insertPointcloud, this);
 
-  lidar_pointcloud_sub_ = nh_.subscribe("/laser/scan", pointcloud_queue_size_,
+  lidar_pointcloud_sub_ = nh_map_.subscribe("/laser/scan", pointcloud_queue_size_,
                                   &TsdfServer::lidar_inserPointcloud, this);
 
   mesh_pub_ = nh_private_.advertise<voxblox_msgs::Mesh>("mesh", 1, true);

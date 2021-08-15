@@ -62,7 +62,7 @@ class GlobalPlanner {
   };
 
   /* Constructor */
-  GlobalPlanner(const ros::NodeHandle& nh, const ros::NodeHandle& nh_private);
+  GlobalPlanner(const ros::NodeHandle& nh, const ros::NodeHandle& nh_private, const ros::NodeHandle& nh_map);
 
   std::string world_frame_id;
 
@@ -119,6 +119,7 @@ class GlobalPlanner {
  private:
   // ROS Node handles:
   ros::NodeHandle nh_;
+  ros::NodeHandle nh_map_;
   ros::NodeHandle nh_private_;
 
   ros::Subscriber local_tree_subscriber_;

@@ -25,10 +25,11 @@ class GPManager {
  public:
   enum PlannerStatus { NOT_READY = 0, READY };
   enum PlanningState { kNull = 0, kStart, kBoxClearance, kExploration, kStop };
-  GPManager(const ros::NodeHandle& nh, const ros::NodeHandle& nh_private);
+  GPManager(const ros::NodeHandle& nh, const ros::NodeHandle& nh_private, const ros::NodeHandle& nh_map);
 
  private:
   ros::NodeHandle nh_;
+  ros::NodeHandle nh_map_;
   ros::NodeHandle nh_private_;
   ros::ServiceServer planner_service_;
   ros::ServiceServer global_planner_service_;

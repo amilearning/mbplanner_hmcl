@@ -136,11 +136,22 @@ struct Serializer<VertexType> {
 int main(int argc, char** argv) {
   ros::init(argc, argv, "mbplanner_node");
   ros::NodeHandle nh;
-  ros::NodeHandle nh_private("~");
+  ros::NodeHandle nh_map;
+  ros::NodeHandle nh_private("~");  
+  
+  ros::CallbackQueue callback_queue_map;
+  nh_map.setCallbackQueue(&callback_queue_map);
+  
+  explorer::MBPlanner mbtree(nh, nh_private,nh_map);
 
-  explorer::MBPlanner mbtree(nh, nh_private);
+  std::thread spinner_thread_map([&callback_queue_map]() {
+  ros::SingleThreadedSpinner spinner_map;
+  spinner_map.spin(&callback_queue_map);
+  });
+
 
   ros::spin();
+  spinner_thread_map.join();
 
   return 0;
 }

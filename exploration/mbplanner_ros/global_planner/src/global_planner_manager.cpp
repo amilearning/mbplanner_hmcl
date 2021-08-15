@@ -3,11 +3,11 @@
 
 namespace explorer {
 
-GPManager::GPManager(const ros::NodeHandle &nh, const ros::NodeHandle &nh_private)
-    : nh_(nh), nh_private_(nh_private) {
+GPManager::GPManager(const ros::NodeHandle &nh, const ros::NodeHandle &nh_private, const ros::NodeHandle &nh_map)
+    : nh_(nh), nh_private_(nh_private), nh_map_(nh_map) {
   planner_status_ = GPManager::PlannerStatus::NOT_READY;
 
-  global_planner_ = new GlobalPlanner(nh, nh_private);
+  global_planner_ = new GlobalPlanner(nh, nh_private,nh_map);
   full_path_viz_pub = nh_.advertise<nav_msgs::Path>("/glbp/final_global_path", 10);
   global_path_viz_pub = nh_.advertise<nav_msgs::Path>("/glbp/edited_global_path", 10);
   if (!(global_planner_->loadParams())) {

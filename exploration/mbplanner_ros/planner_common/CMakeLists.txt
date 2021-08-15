@@ -17,7 +17,7 @@ cs_add_library(${PROJECT_NAME}
   src/trajectory.cpp
   src/visualizer.cpp
   src/random_sampler.cpp
-  src/map_manager_octomap_impl.cpp
+  # src/map_manager_octomap_impl.cpp
   src/map_manager_voxblox_impl.cpp
 )
 

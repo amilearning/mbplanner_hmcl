@@ -6,8 +6,8 @@
 
 namespace explorer {
 
-GlobalPlanner::GlobalPlanner(const ros::NodeHandle& nh, const ros::NodeHandle& nh_private)
-    : nh_(nh), nh_private_(nh_private) {
+GlobalPlanner::GlobalPlanner(const ros::NodeHandle& nh, const ros::NodeHandle& nh_private, const ros::NodeHandle& nh_map)
+    : nh_(nh), nh_private_(nh_private),nh_map_(nh_map) {
   world_frame_id = "world";
 
   planner_trigger_time_ = 0;
@@ -16,7 +16,7 @@ GlobalPlanner::GlobalPlanner(const ros::NodeHandle& nh, const ros::NodeHandle& n
   map_manager_ = new MapManagerOctomap(nh_, nh_private_);
 #else
   map_manager_ =
-      new MapManagerVoxblox<MapManagerVoxbloxServer, MapManagerVoxbloxVoxel>(nh_, nh_private_);
+      new MapManagerVoxblox<MapManagerVoxbloxServer, MapManagerVoxbloxVoxel>(nh_, nh_private_,nh_map_);
 #endif
 
   visualization_ = new Visualization(nh_, nh_private_);

@@ -41,8 +41,8 @@ class TsdfServer {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-  TsdfServer(const ros::NodeHandle& nh, const ros::NodeHandle& nh_private);
-  TsdfServer(const ros::NodeHandle& nh, const ros::NodeHandle& nh_private,
+  TsdfServer(const ros::NodeHandle& nh, const ros::NodeHandle& nh_private, const ros::NodeHandle& nh_map);
+  TsdfServer(const ros::NodeHandle& nh, const ros::NodeHandle& nh_private, const ros::NodeHandle& nh_map,
              const TsdfMap::Config& config,
              const TsdfIntegratorBase::Config& integrator_config,
              const MeshIntegratorConfig& mesh_config);
@@ -134,6 +134,7 @@ class TsdfServer {
       sensor_msgs::PointCloud2::Ptr* pointcloud_msg, Transformation* T_G_C);
 
   ros::NodeHandle nh_;
+  ros::NodeHandle nh_map_;
   ros::NodeHandle nh_private_;
 
   /// Data subscribers.

@@ -10,8 +10,8 @@ class MapManager {
  public:
   enum VoxelStatus { kUnknown = 0, kOccupied, kFree };
 
-  MapManager(const ros::NodeHandle& nh, const ros::NodeHandle& nh_private)
-      : nh_(nh), nh_private_(nh_private) {}
+  MapManager(const ros::NodeHandle& nh, const ros::NodeHandle& nh_private,const ros::NodeHandle& nh_map)
+      : nh_(nh), nh_private_(nh_private),nh_map_(nh_map) {}
   virtual double getResolution() const = 0;
   virtual bool getStatus() const = 0;
   virtual VoxelStatus getVoxelStatus(const Eigen::Vector3d& position) const = 0;
@@ -48,6 +48,7 @@ class MapManager {
 
  private:
   ros::NodeHandle nh_;
+  ros::NodeHandle nh_map_;
   ros::NodeHandle nh_private_;
 };
 
