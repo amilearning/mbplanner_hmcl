@@ -22,12 +22,12 @@ MBParams:
   use_angles: 1  # When this is 1, ax is the direction of acceleration (0-2pi) in the x-y plane, ay is the magnitude
   ax_min: -3.14195
   ay_min: 0
-  az_min: -0.1
+  az_min: -0.5
   ax_max: 3.14195
   ay_max: 1.0
-  az_max: 0.1
+  az_max: 0.5
   v_max: 1.0
-  laser_dist: 2.0 # (metre), minimum distance to the obstacles using 2d lidar 
+  laser_dist: 3.0 # (metre), minimum distance to the obstacles using 2d lidar 
  
   
   # Tree generation parameters:
@@ -91,7 +91,7 @@ BoundedSpaceParams:
   Global:
     type:           kCuboid
     min_val:        [-3.0, -3.0, 0.8]
-    max_val:        [25, 15.0, 3.0]
+    max_val:        [25, 15.0, 2.5]
   Local:
     type:           kCuboid
     min_val:        [-7.0, -7.0, -0.5]

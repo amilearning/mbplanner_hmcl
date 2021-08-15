@@ -116,7 +116,33 @@ bool PlannerControlInterface::globalPlannerCallback(planner_msgs::pci_global::Re
   exe_path_en_ = !req.not_exe_path;
   bound_mode_ = req.bound_mode;
   frontier_id_ = req.id;
-  res.success = true;
+  res.success = true;   
+  
+  planner_msgs::planner_global plan_srv;
+  plan_srv.request.id = frontier_id_;
+  if (planner_global_client_.call(plan_srv)) {
+    if (!plan_srv.response.path.empty()) {
+      // Execute path.
+      std::vector<geometry_msgs::Pose> path_to_be_exe;
+      pci_manager_->executePath(plan_srv.response.path, path_to_be_exe,
+                                PCIManager::ExecutionPathType::kGlobalPath);
+      current_path_ = path_to_be_exe;
+      res.target_pose[0] = path_to_be_exe.back().position.x;
+      res.target_pose[1] = path_to_be_exe.back().position.y;
+      res.target_pose[2] = path_to_be_exe.back().position.z;
+      res.path_empty = false;
+    } else {
+      res.path_empty = true;
+      ROS_WARN_THROTTLE(1, "Planner returned an empty path");
+      ros::Duration(0.5).sleep();
+    }
+
+  } else {
+    ROS_WARN_THROTTLE(1, "Planner service failed");
+    ros::Duration(0.5).sleep();
+  }
+
+  
   return true;
 }
 

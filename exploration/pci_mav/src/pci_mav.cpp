@@ -367,6 +367,7 @@ bool PCIMAV::executePath(const std::vector<geometry_msgs::Pose> &path,
     double sum_time_from_start = 0.0;
     for (int i = 0; i < path_new.size(); i++) {
       double yaw = tf::getYaw(path_new[i].orientation);
+      if(isnan(yaw)){continue;}
       Eigen::Vector3d p(path_new[i].position.x, path_new[i].position.y,
                         path_new[i].position.z);
       trajectory_point_.position_W.x() = p.x();

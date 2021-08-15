@@ -39,7 +39,7 @@ BoundedSpaceParams:
   Global:
     type:           kCuboid
     min_val:        [-3.0, -3.0, 0.8]
-    max_val:        [25, 15.0, 3.0]
+    max_val:        [25, 15.0, 2.5]
   Local:
     type:           kCuboid
     min_val:        [-7.0, -7.0, -0.5]

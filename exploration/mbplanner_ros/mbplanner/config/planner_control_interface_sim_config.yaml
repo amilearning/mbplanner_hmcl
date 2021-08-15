@@ -12,6 +12,6 @@ init_motion:
 RobotDynamics:
   dt: 0.05
   v_max: 1.0
-  v_homing_max: 1.0
+  v_homing_max: 0.5
   yaw_rate_max: 0.4
-  v_init_max: 1.0
+  v_init_max: 0.5

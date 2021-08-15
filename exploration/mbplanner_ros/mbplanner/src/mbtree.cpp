@@ -190,6 +190,7 @@ void MBTree::sampleAccelUsingLaser(Eigen::Vector3d& accl, double theta, StateNod
 bool MBTree::inside_lidar_safe_area(StateNode* sampled_node){
   double angle_in_global = atan2(sampled_node->position(1)-current_state_.position(1), sampled_node->position(0)-current_state_.position(0));  
   double angle_in_local_frame = angle_in_global- current_state_.yaw;
+  truncateYaw(angle_in_local_frame);
   int idx = (int)((angle_in_local_frame-laser_data.angle_min)/laser_data.angle_increment);
   double d1 = laser_data.range_max;
   if(isfinite(laser_data.ranges[idx])){
@@ -473,12 +474,12 @@ int MBTree::buildTree(bool prev_point_plan, bool use_current_state, bool use_giv
                               0.5 * mb_params_.dt * mb_params_.dt * a;
           // Is the state within the local and global bounding box:
           if (!inside_global_box(d_state->position)) {
-            ROS_INFO("git global box");
+            ROS_INFO("hit global box");
             hit = true;
             break;
           }
           if (!inside_local_box(d_state->position)) {
-            ROS_INFO("git local box");
+            ROS_INFO("hit local box");
             hit = true;
             break;
           }
