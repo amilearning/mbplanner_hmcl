@@ -191,6 +191,13 @@ bool MBTree::inside_lidar_safe_area(StateNode* sampled_node){
   double angle_in_global = atan2(sampled_node->position(1)-current_state_.position(1), sampled_node->position(0)-current_state_.position(0));  
   double angle_in_local_frame = angle_in_global- current_state_.yaw;
   truncateYaw(angle_in_local_frame);
+
+  // return false if angle beyond the lidar sensing range
+    if(angle_in_local_frame < laser_data.angle_min ||  angle_in_local_frame > laser_data.angle_max){
+      ROS_WARN("sampling over range sensor limit");
+      return false;      
+    }
+
   int idx = (int)((angle_in_local_frame-laser_data.angle_min)/laser_data.angle_increment);
   double d1 = laser_data.range_max;
   if(isfinite(laser_data.ranges[idx])){

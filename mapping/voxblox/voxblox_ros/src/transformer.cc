@@ -98,6 +98,11 @@ bool Transformer::lookupTransformTf(const std::string& from_frame,
     from_frame_modified = sensor_frame_;
   }
 
+  try{tf_listener_.waitForTransform(to_frame, from_frame_modified,time_to_lookup, ros::Duration(0.5) );
+    }catch (tf::TransformException ex) {
+     ROS_ERROR_STREAM(
+        "fail to wait for transform -- transformer: " << ex.what());      
+  }
   // Previous behavior was just to use the latest transform if the time is in
   // the future. Now we will just wait.
   if (!tf_listener_.canTransform(to_frame, from_frame_modified,
@@ -106,6 +111,7 @@ bool Transformer::lookupTransformTf(const std::string& from_frame,
   }
 
   try {
+    
     tf_listener_.lookupTransform(to_frame, from_frame_modified, time_to_lookup,
                                  tf_transform);
   } catch (tf::TransformException& ex) {  // NOLINT

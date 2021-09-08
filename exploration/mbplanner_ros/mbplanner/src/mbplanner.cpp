@@ -17,7 +17,7 @@ MBPlanner::MBPlanner(const ros::NodeHandle& nh, const ros::NodeHandle& nh_privat
       nh_.advertiseService("planner_set_vel", &MBPlanner::setVelCb, this);
 
   odometry_subscriber_ = nh_.subscribe("odometry", 10, &MBPlanner::odometryCallback, this);
-  laser_sub = nh_map_.subscribe("/laser/scan", 10, &MBPlanner::laserCallback, this);
+  laser_sub = nh_map_.subscribe("/scan", 10, &MBPlanner::laserCallback, this);
   
   this->planning_from_prev_node = false;
   this->first_plan = true;

@@ -662,9 +662,18 @@ const boost::numeric::ublas::matrix<double>& LaserProjection::getUnitVectors_(do
     if(!scan_in.ranges.empty()) end_time += ros::Duration ().fromSec ( (scan_in.ranges.size()-1) * scan_in.time_increment);
 
     tf::StampedTransform start_transform, end_transform ;
+    try {      
+      tf.waitForTransform(target_frame, scan_in.header.frame_id,start_time ,ros::Duration(0.5));
+      tf.waitForTransform(target_frame, scan_in.header.frame_id,end_time, ros::Duration(0.5));
+      tf.lookupTransform (target_frame, scan_in.header.frame_id, start_time, start_transform);
+      tf.lookupTransform (target_frame, scan_in.header.frame_id, end_time, end_transform);
+    } catch (tf::TransformException& ex) {
+    ROS_INFO("lasergeo laser frame got delayed");
+    return;
+    }  
 
-    tf.lookupTransform (target_frame, scan_in.header.frame_id, start_time, start_transform);
-    tf.lookupTransform (target_frame, scan_in.header.frame_id, end_time, end_transform);
+    // tf.lookupTransform (target_frame, scan_in.header.frame_id, start_time, start_transform);
+    // tf.lookupTransform (target_frame, scan_in.header.frame_id, end_time, end_transform);
 
     tf::Quaternion q;
     start_transform.getBasis().getRotation(q);

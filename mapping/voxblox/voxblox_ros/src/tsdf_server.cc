@@ -62,8 +62,8 @@ TsdfServer::TsdfServer(const ros::NodeHandle& nh,
   pointcloud_sub_ = nh_.subscribe("pointcloud", pointcloud_queue_size_,
                                   &TsdfServer::insertPointcloud, this);
 
-  lidar_pointcloud_sub_ = nh_map_.subscribe("/laser/scan", pointcloud_queue_size_,
-                                  &TsdfServer::lidar_inserPointcloud, this);
+  // lidar_pointcloud_sub_ = nh_map_.subscribe("/scan", pointcloud_queue_size_,
+  //                                 &TsdfServer::lidar_inserPointcloud, this);
 
   mesh_pub_ = nh_private_.advertise<voxblox_msgs::Mesh>("mesh", 1, true);
 
@@ -414,12 +414,14 @@ bool TsdfServer::getNextPointcloudFromQueue(
     return false;
   }
   *pointcloud_msg = queue->front();
-  if (transformer_.lookupTransform((*pointcloud_msg)->header.frame_id,
+  // if (transformer_.lookupTransform((*pointcloud_msg)->header.frame_id,
+  if (transformer_.lookupTransform("camera_link", 
                                    world_frame_,
-                                   (*pointcloud_msg)->header.stamp, T_G_C)) {
+                                   ros::Time::now(), T_G_C)) {
     queue->pop();
     return true;
   } else {
+    ROS_INFO("tf got delay");
     if (queue->size() >= kMaxQueueSize) {
       ROS_ERROR_THROTTLE(60,
                          "Input pointcloud queue getting too long! Dropping "
@@ -438,15 +440,20 @@ void TsdfServer::lidar_inserPointcloud(
   lidar_sub_done =true;
     if(!tf_listener_.waitForTransform(
         laser_pointcloud->header.frame_id,
-        "/base_link",
-        laser_pointcloud->header.stamp + ros::Duration().fromSec(laser_pointcloud->ranges.size()*laser_pointcloud->time_increment),
+        "/world",
+        // laser_pointcloud->header.frame_id,
+        // "/base_link",
+        // ros::Time::now(),
+        laser_pointcloud->header.stamp,
         ros::Duration(0.5))){
           ROS_INFO("no such transform from lidar to base link");
      return;
+  }else{
+      ROS_INFO("lidar has been added");
   }
-  projector_.transformLaserScanToPointCloud("/base_link",*laser_pointcloud,pcd_from_lidar,tf_listener_);
+  projector_.transformLaserScanToPointCloud("/world",*laser_pointcloud,pcd_from_lidar,tf_listener_);
   pcd_from_lidar.header.stamp = laser_pointcloud->header.stamp;
-  pcd_from_lidar.header.frame_id = laser_pointcloud->header.frame_id; 
+  pcd_from_lidar.header.frame_id ="world";// laser_pointcloud->header.frame_id; 
   
 }
 

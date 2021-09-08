@@ -2,13 +2,13 @@
   <!-- All settings -->
   <arg name="robot_name" default="m100"/>
   <arg name="gazebo_gui_en" default="false"/>
-  <arg name="use_sim_time" default="true"/>
+  <arg name="use_sim_time" default="false"/>
   <arg name="rviz_en" default="true" />
   <arg name="launch_prefix" default=""/> <!-- gdb -ex run //args  | xterm -e gdb -args-->
   <param name="use_sim_time" value="$(arg use_sim_time)"/>
     <!-- <arg name="odometry_topic" default="$(arg robot_name)/ground_truth/odometry_throttled"/> -->
     <!-- <arg name="odometry_topic" default="/mavros/local_position/odom"/>   -->
-    <arg name="odometry_topic" default="ground_truth_pose"/>    
+    <arg name="odometry_topic" default="/mavros/local_position/odom"/>     
     <!-- <arg name="odometry_topic" default="ov_msckf/odomimu"/>     -->
     
   <!-- Config files -->
@@ -29,7 +29,7 @@
        
     <!-- /camera_points /camera/depth/points -->
     <!-- <remap from="pointcloud" to="/velodyne_points" /> -->
-    <remap from="pointcloud" to="/camera/depth/points" />    
+    <remap from="pointcloud" to="/camera/depth/color/points" />    
     <rosparam command="load" file="$(arg mbplanner_config_file)" />
     <rosparam command="load" file="$(arg map_config_file)" />
   </node>
