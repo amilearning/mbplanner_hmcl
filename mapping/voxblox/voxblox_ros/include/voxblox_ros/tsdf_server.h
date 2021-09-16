@@ -3,6 +3,7 @@
 
 #include <pcl/conversions.h>
 #include <pcl/filters/filter.h>
+#include <pcl/filters/voxel_grid.h>
 #include <pcl/filters/extract_indices.h>
 #include <pcl/filters/frustum_culling.h>
 #include <pcl/point_types.h>
@@ -123,7 +124,12 @@ class TsdfServer {
   void tsdfMapCallback(const voxblox_msgs::Layer& layer_msg);
 
   Eigen::Affine3d transformTFToAffine3d(const tf::Transform &t);
-  
+  // double horizontal_fov;
+  // double vertical_fov;
+  // double near_plane_dist;
+  // double far_plane_dist;
+  // float leaf_size;
+
  protected:
   /**
    * Gets the next pointcloud that has an available transform to process from
@@ -176,6 +182,7 @@ class TsdfServer {
   ros::Timer publish_map_timer_;
 
   bool verbose_;
+ 
 
   /**
    * Global/map coordinate frame. Will always look up TF transforms to this

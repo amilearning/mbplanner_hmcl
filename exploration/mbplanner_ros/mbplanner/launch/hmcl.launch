@@ -9,6 +9,7 @@
     <!-- <arg name="odometry_topic" default="$(arg robot_name)/ground_truth/odometry_throttled"/> -->
     <!-- <arg name="odometry_topic" default="/mavros/local_position/odom"/>   -->
     <arg name="odometry_topic" default="/mavros/local_position/odom"/>     
+    <!-- <arg name="odometry_topic" default="/vins_odom"/>      -->
     <!-- <arg name="odometry_topic" default="ov_msckf/odomimu"/>     -->
     
   <!-- Config files -->
@@ -17,8 +18,8 @@
   <arg name="voxblox_config_file" default="$(find mbplanner)/config/voxblox_sim_config.yaml"/>
   <arg name="octomap_config_file" default="$(find mbplanner)/config/octomap_sim_config.yaml"/>
   <arg name="map_config_file" default="$(arg voxblox_config_file)"/>
-  <arg name="world_file" default="$(find planner_gazebo_sim)/worlds/pittsburgh_mine.world"/>
-  <arg name="pci_file" default="$(find mbplanner)/config/planner_control_interface_sim_config.yaml"/>
+  <!-- <arg name="world_file" default="$(find planner_gazebo_sim)/worlds/pittsburgh_mine.world"/>
+  <arg name="pci_file" default="$(find mbplanner)/config/planner_control_interface_sim_config.yaml"/> -->
 
   
 
@@ -26,6 +27,8 @@
     <remap from="odometry" to="$(arg odometry_topic)" />
     <remap from="cam0/camera_info" to="/stereo/left/camera_info" />
     <remap from="cam1/camera_info" to="/stereo/right/camera_info" />
+    <!-- <remap from="freespace_pointcloud" to="/camera/depth/color/points" /> -->
+    
        
     <!-- /camera_points /camera/depth/points -->
     <!-- <remap from="pointcloud" to="/velodyne_points" /> -->

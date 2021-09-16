@@ -37,14 +37,14 @@ MBParams:
   dt: 0.25
   x_bias: 1
   a_cone: 1.7
-  iterations: 7 
+  iterations: 4
   branch_limit: 3
-  sample_steps: 5 
-  min_edge_length: 3
+  sample_steps: 3 
+  min_edge_length: 3.0
   second_lvl_samples: 0
   later_iter_samples: 2 # Open space: 2
-  max_sampling_iters: 90
-  min_vertex_separation: 0.25
+  max_sampling_iters: 60
+  min_vertex_separation: 0.2
 
   obst_steps: 20
   forward_angle: 180.0
@@ -90,12 +90,12 @@ SensorParams:
 BoundedSpaceParams:
   Global:
     type:           kCuboid
-    min_val:        [-20.0, -20.0, -5.0]
-    max_val:        [20, 20.0, 5.0]
+    min_val:        [-50.0, -50.0, -1.0]
+    max_val:        [50, 50.0, 3.0]
   Local:
     type:           kCuboid
-    min_val:        [-20.0, -20.0, -2.0]
-    max_val:        [20.0, 20.0, 2.0]
+    min_val:        [-8.0, -8.0, -0.5]
+    max_val:        [8.0, 8.0, 0.5]
     min_extension:  [-1.0, -1.0, 0.0]
     max_extension:  [1.0, 1.0, 0.0]
 #-------------------------------------------------------------------------------

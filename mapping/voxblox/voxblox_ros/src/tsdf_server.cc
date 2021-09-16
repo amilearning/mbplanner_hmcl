@@ -22,11 +22,16 @@ TsdfServer::TsdfServer(const ros::NodeHandle& nh,
                        const MeshIntegratorConfig& mesh_config)
     : nh_(nh),
       nh_private_(nh_private),
-      nh_map_(nh_map),
-      verbose_(true),
+      nh_map_(nh_map),      
+      verbose_(false),
       world_frame_("world"),
       icp_corrected_frame_("icp_corrected"),
       pose_corrected_frame_("pose_corrected"),
+      // horizontal_fov(90),      
+      // vertical_fov(90),
+      // near_plane_dist(0.3),
+      // far_plane_dist(6.0),
+      // leaf_size(0.3),
       max_block_distance_from_body_(std::numeric_limits<FloatingPoint>::max()),
       slice_level_(0.5),
       use_freespace_pointcloud_(false),
@@ -91,7 +96,11 @@ TsdfServer::TsdfServer(const ros::NodeHandle& nh,
     nh_private_.param("pose_corrected_frame", pose_corrected_frame_,
                       pose_corrected_frame_);
   }
-
+  // load parameters for camera filtering 
+  
+  
+  // nh_private_.param("leaf_size", leaf_size, leaf_size);  
+  
   // Initialize TSDF Map and integrator.
   tsdf_map_.reset(new TsdfMap(config));
 
@@ -158,6 +167,11 @@ void TsdfServer::getServerConfigFromRosParam(
     const ros::NodeHandle& nh_private) {
   // Before subscribing, determine minimum time between messages.
   // 0 by default.
+  // nh_private_.param("horizontal_fov", horizontal_fov,horizontal_fov);
+  // nh_private_.param("vertical_fov", vertical_fov,vertical_fov);
+  // nh_private_.param("near_plane_dist", near_plane_dist,near_plane_dist);
+  // nh_private_.param("far_plane_dist", far_plane_dist,far_plane_dist); 
+  // nh_private_.param("leaf_size", leaf_size,leaf_size); 
   double min_time_between_msgs_sec = 0.0;
   nh_private.param("min_time_between_msgs_sec", min_time_between_msgs_sec,
                    min_time_between_msgs_sec);
@@ -247,10 +261,10 @@ void TsdfServer::processPointCloudMessageAndInsert(
                   1, 0, 0, 0,
                   0, 0, 0, 1;
      Eigen::Matrix4f trans_robot =  Eigen::Matrix4f::Identity().cast<float> () * cam2robot;
-     double horizontal_fov = 100;
-     double vertical_fov = 80;
-     double near_plane_dist = 0.2;
-     double far_plane_dist = 5.0;
+      double horizontal_fov   = 90.0;
+      double vertical_fov     = 90.0;
+      double near_plane_dist  = 0.3;
+      double far_plane_dist   = 6.0;
      ////////////////////////////////////////////////////////////////////
   // Convert differently depending on RGB or I type.
   if(!lidar_source){
@@ -263,9 +277,16 @@ void TsdfServer::processPointCloudMessageAndInsert(
           
         pcl::PointCloud<pcl::PointXYZRGB>::Ptr latest_cloud_tmp (new pcl::PointCloud<pcl::PointXYZRGB>);
         pcl::fromROSMsg(*pointcloud_msg, *latest_cloud_tmp);
+////////////  Downsample pcl///////////////////
+        pcl::VoxelGrid<pcl::PointXYZRGB> sor;
+        sor.setInputCloud (latest_cloud_tmp);             
+        sor.setLeafSize (0.4f, 0.4f, 0.4f); //leaf size
+        sor.filter (*latest_cloud_tmp);        
+//////////////////////////////////////////
+
         pcl::FrustumCulling<pcl::PointXYZRGB> fc (false);    
-        fc.setCameraPose (trans_robot);
-        fc.setHorizontalFOV (horizontal_fov);
+        fc.setCameraPose (trans_robot); 
+        fc.setHorizontalFOV (horizontal_fov); 
         fc.setVerticalFOV (vertical_fov);
         fc.setNearPlaneDistance (near_plane_dist);
         fc.setFarPlaneDistance (far_plane_dist);
@@ -282,6 +303,14 @@ void TsdfServer::processPointCloudMessageAndInsert(
           
           pcl::PointCloud<pcl::PointXYZI>::Ptr latest_cloud_tmp (new pcl::PointCloud<pcl::PointXYZI>);
         pcl::fromROSMsg(*pointcloud_msg, *latest_cloud_tmp);
+
+  ////////////  Downsample pcl///////////////////
+        pcl::VoxelGrid<pcl::PointXYZI> sor;
+        sor.setInputCloud (latest_cloud_tmp);             
+        sor.setLeafSize (0.4f, 0.4f, 0.4f); //leaf size
+        sor.filter (*latest_cloud_tmp);        
+//////////////////////////////////////////
+
         pcl::FrustumCulling<pcl::PointXYZI> fc (false);   
         fc.setCameraPose (trans_robot);
         fc.setHorizontalFOV (horizontal_fov);
@@ -301,6 +330,13 @@ void TsdfServer::processPointCloudMessageAndInsert(
         
           pcl::PointCloud<pcl::PointXYZ>::Ptr latest_cloud_tmp (new pcl::PointCloud<pcl::PointXYZ>);
         pcl::fromROSMsg(*pointcloud_msg, *latest_cloud_tmp);
+
+////////////  Downsample pcl///////////////////
+        pcl::VoxelGrid<pcl::PointXYZ> sor;
+        sor.setInputCloud (latest_cloud_tmp);             
+        sor.setLeafSize (0.4f, 0.4f, 0.4f); //leaf size
+        sor.filter (*latest_cloud_tmp);        
+//////////////////////////////////////////
         pcl::FrustumCulling<pcl::PointXYZ> fc (false);    
         fc.setCameraPose (trans_robot);
         fc.setHorizontalFOV (horizontal_fov);
@@ -317,6 +353,7 @@ void TsdfServer::processPointCloudMessageAndInsert(
     pcl::PointCloud<pcl::PointXYZ> pointcloud_pcl;
     pcl::PointCloud<pcl::PointXYZ>::Ptr lidar_cloud_tmp (new pcl::PointCloud<pcl::PointXYZ>);
     pcl::fromROSMsg(pcd_from_lidar, *lidar_cloud_tmp);
+ 
     tf::StampedTransform lidar_to_world;
     try {      
       tf_listener_.waitForTransform("/world", pcd_from_lidar.header.frame_id,pcd_from_lidar.header.stamp ,ros::Duration(0.5));
