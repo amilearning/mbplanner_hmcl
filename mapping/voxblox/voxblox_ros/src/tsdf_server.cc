@@ -62,8 +62,8 @@ TsdfServer::TsdfServer(const ros::NodeHandle& nh,
   pointcloud_sub_ = nh_.subscribe("pointcloud", pointcloud_queue_size_,
                                   &TsdfServer::insertPointcloud, this);
 
-  lidar_pointcloud_sub_ = nh_map_.subscribe("/laser/scan", pointcloud_queue_size_,
-                                  &TsdfServer::lidar_inserPointcloud, this);
+  // lidar_pointcloud_sub_ = nh_map_.subscribe("/laser/scan", pointcloud_queue_size_,
+  //                                 &TsdfServer::lidar_inserPointcloud, this);
 
   mesh_pub_ = nh_private_.advertise<voxblox_msgs::Mesh>("mesh", 1, true);
 
@@ -223,6 +223,8 @@ void TsdfServer::getServerConfigFromRosParam(
 void TsdfServer::processPointCloudMessageAndInsert(
     const sensor_msgs::PointCloud2::Ptr& pointcloud_msg,
     const Transformation& T_G_C, const bool is_freespace_pointcloud, bool lidar_source) {
+  
+  
   // Convert the PCL pointcloud into our awesome format.
 
   // Horrible hack fix to fix color parsing colors in PCL.
@@ -255,23 +257,42 @@ void TsdfServer::processPointCloudMessageAndInsert(
   // Convert differently depending on RGB or I type.
   if(!lidar_source){
       if (color_pointcloud) {
+        // pcl::PointCloud<pcl::PointXYZRGB> pointcloud_pcl;
         pcl::PointCloud<pcl::PointXYZRGB> pointcloud_pcl;
         // pointcloud_pcl is modified below:
         // pcl::fromROSMsg(*pointcloud_msg, pointcloud_pcl);
         // filter pcl fov
-        ///////////////////////////////////////////////////
-          
+        ///////////////////////////////////////////////////          
         pcl::PointCloud<pcl::PointXYZRGB>::Ptr latest_cloud_tmp (new pcl::PointCloud<pcl::PointXYZRGB>);
         pcl::fromROSMsg(*pointcloud_msg, *latest_cloud_tmp);
+        //Downsample////////////////////////////
+        pcl::VoxelGrid<pcl::PointXYZRGB> sor;
+        sor.setInputCloud (latest_cloud_tmp);             
+        sor.setLeafSize (0.3f, 0.3f, 0.3f); //leaf size
+        sor.filter (*latest_cloud_tmp);   
+        ////////////////////////////
         pcl::FrustumCulling<pcl::PointXYZRGB> fc (false);    
-        fc.setCameraPose (trans_robot);
-        fc.setHorizontalFOV (horizontal_fov);
-        fc.setVerticalFOV (vertical_fov);
-        fc.setNearPlaneDistance (near_plane_dist);
-        fc.setFarPlaneDistance (far_plane_dist);
-        fc.setInputCloud (latest_cloud_tmp);
-        fc.filter(pointcloud_pcl);
-              
+        ///// augment free space
+          if(is_freespace_pointcloud){              
+                  for (pcl::PointCloud<pcl::PointXYZRGB>::iterator it = latest_cloud_tmp->begin(); it != latest_cloud_tmp->end(); ++it)
+                    {
+                      it->x = it->x*0.8;
+                      it->y = it->y*0.8;
+                      it->z = it->z*0.8;                 
+                    }  
+                    pointcloud_pcl = *latest_cloud_tmp;
+            }else{                  
+                  fc.setCameraPose (trans_robot);
+                  fc.setHorizontalFOV (horizontal_fov);
+                  fc.setVerticalFOV (vertical_fov);
+                  fc.setNearPlaneDistance (near_plane_dist);
+                  fc.setFarPlaneDistance (far_plane_dist); 
+                  fc.setInputCloud (latest_cloud_tmp);
+                  fc.filter(pointcloud_pcl);                 
+            }
+            
+          ////
+       
         ////////////////////////////////////////////////
         convertPointcloud(pointcloud_pcl, color_map_, &points_C, &colors);
       } else if (has_intensity) {
@@ -280,17 +301,35 @@ void TsdfServer::processPointCloudMessageAndInsert(
         // pcl::fromROSMsg(*pointcloud_msg, pointcloud_pcl);
         /////////////////////////////////////////////////////////////
           
-          pcl::PointCloud<pcl::PointXYZI>::Ptr latest_cloud_tmp (new pcl::PointCloud<pcl::PointXYZI>);
+        pcl::PointCloud<pcl::PointXYZI>::Ptr latest_cloud_tmp (new pcl::PointCloud<pcl::PointXYZI>);
         pcl::fromROSMsg(*pointcloud_msg, *latest_cloud_tmp);
+        //Downsample////////////////////////////
+        pcl::VoxelGrid<pcl::PointXYZI> sor;
+        sor.setInputCloud (latest_cloud_tmp);             
+        sor.setLeafSize (0.3f, 0.3f, 0.3f); //leaf size
+        sor.filter (*latest_cloud_tmp);   
+        ////////////////////////////
         pcl::FrustumCulling<pcl::PointXYZI> fc (false);   
-        fc.setCameraPose (trans_robot);
-        fc.setHorizontalFOV (horizontal_fov);
-        fc.setVerticalFOV (vertical_fov);
-        fc.setNearPlaneDistance (near_plane_dist);
-        fc.setFarPlaneDistance (far_plane_dist);
-        fc.setInputCloud (latest_cloud_tmp);
-        fc.filter(pointcloud_pcl);
-          
+        if(is_freespace_pointcloud){
+              for (pcl::PointCloud<pcl::PointXYZI>::iterator it = latest_cloud_tmp->begin(); it != latest_cloud_tmp->end(); ++it)
+                    {
+                      it->x = it->x*0.8;
+                      it->y = it->y*0.8;
+                      it->z = it->z*0.8;                  
+                    }       
+                  pointcloud_pcl = *latest_cloud_tmp;
+                }else{        
+                fc.setCameraPose (trans_robot);
+                fc.setHorizontalFOV (horizontal_fov);
+                fc.setVerticalFOV (vertical_fov);
+                fc.setNearPlaneDistance (near_plane_dist);
+                fc.setFarPlaneDistance (far_plane_dist);       
+                fc.setInputCloud (latest_cloud_tmp);
+                fc.filter(pointcloud_pcl);
+                }
+       
+        ///// augment free space        
+        ////
         //////////////////////////////////////////////////////////////
         convertPointcloud(pointcloud_pcl, color_map_, &points_C, &colors);
       } else {
@@ -301,15 +340,34 @@ void TsdfServer::processPointCloudMessageAndInsert(
         
           pcl::PointCloud<pcl::PointXYZ>::Ptr latest_cloud_tmp (new pcl::PointCloud<pcl::PointXYZ>);
         pcl::fromROSMsg(*pointcloud_msg, *latest_cloud_tmp);
+         //Downsample////////////////////////////
+        pcl::VoxelGrid<pcl::PointXYZ> sor;
+        sor.setInputCloud (latest_cloud_tmp);             
+        sor.setLeafSize (0.3f, 0.3f, 0.3f); //leaf size
+        sor.filter (*latest_cloud_tmp);   
+        ////////////////////////////
         pcl::FrustumCulling<pcl::PointXYZ> fc (false);    
-        fc.setCameraPose (trans_robot);
-        fc.setHorizontalFOV (horizontal_fov);
-        fc.setVerticalFOV (vertical_fov);
-        fc.setNearPlaneDistance (near_plane_dist);
-        fc.setFarPlaneDistance (far_plane_dist);
-        fc.setInputCloud (latest_cloud_tmp);
-        fc.filter(pointcloud_pcl);
+         if(is_freespace_pointcloud){
+             for (pcl::PointCloud<pcl::PointXYZ>::iterator it = latest_cloud_tmp->begin(); it != latest_cloud_tmp->end(); ++it)
+                    {
+                      it->x = it->x*0.8; 
+                      it->y = it->y*0.8;
+                      it->z = it->z*0.8;                  
+                    }        
+                 pointcloud_pcl = *latest_cloud_tmp;
+          }else{
+            fc.setCameraPose (trans_robot);
+            fc.setHorizontalFOV (horizontal_fov);
+            fc.setVerticalFOV (vertical_fov);
+            fc.setNearPlaneDistance (near_plane_dist);
+            fc.setFarPlaneDistance (far_plane_dist);
+            fc.setInputCloud (latest_cloud_tmp);
+            fc.filter(pointcloud_pcl);
+          }
         
+        ///// augment free space
+        
+        ////
         //////////////////////////////////////////////////////////////
         convertPointcloud(pointcloud_pcl, color_map_, &points_C, &colors);
       }
@@ -511,7 +569,7 @@ void TsdfServer::insertFreespacePointcloud(
     // So we have to process the queue anyway... Push this back.
     freespace_pointcloud_queue_.push(pointcloud_msg_in);
   }
-
+  ROS_INFO("integrate free space point cloud");
   Transformation T_G_C;
   sensor_msgs::PointCloud2::Ptr pointcloud_msg;
   while (getNextPointcloudFromQueue(&freespace_pointcloud_queue_,

@@ -3,6 +3,7 @@
 
 #include <pcl/conversions.h>
 #include <pcl/filters/filter.h>
+#include <pcl/filters/voxel_grid.h>
 #include <pcl/filters/extract_indices.h>
 #include <pcl/filters/frustum_culling.h>
 #include <pcl/point_types.h>

@@ -1,0 +1,34 @@
+{
+  "configurations": [
+    {
+      "browse": {
+        "databaseFilename": "",
+        "limitSymbolsToIncludedHeaders": true
+      },
+      "includePath": [
+        "/home/hojin/drone_ws4/mbplanner_ws/devel/include/**",
+        "/opt/ros/melodic/include/**",
+        "/home/hojin/drone_ws4/mbplanner_ws/src/mbplanner_hmcl/misc/eigen_checks/include/**",
+        "/home/hojin/drone_ws4/mbplanner_ws/src/mbplanner_hmcl/exploration/mbplanner_ros/global_planner/include/**",
+        "/home/hojin/drone_ws4/mbplanner_ws/src/mbplanner_hmcl/exploration/mbplanner_ros/kdtree/include/**",
+        "/home/hojin/drone_ws4/mbplanner_ws/src/mbplanner_hmcl/laser_geometry/include/**",
+        "/home/hojin/drone_ws4/mbplanner_ws/src/mbplanner_hmcl/misc/mav_comm/mav_msgs/include/**",
+        "/home/hojin/drone_ws4/mbplanner_ws/src/mbplanner_hmcl/misc/mav_comm/mav_planning_msgs/include/**",
+        "/home/hojin/drone_ws4/mbplanner_ws/src/mbplanner_hmcl/exploration/mbplanner_ros/mbplanner/include/**",
+        "/home/hojin/drone_ws4/mbplanner_ws/src/mbplanner_hmcl/misc/minkindr/minkindr/include/**",
+        "/home/hojin/drone_ws4/mbplanner_ws/src/mbplanner_hmcl/misc/minkindr_ros/minkindr_conversions/include/**",
+        "/home/hojin/drone_ws4/mbplanner_ws/src/mbplanner_hmcl/mapping/volumetric_mapping/octomap_world/include/**",
+        "/home/hojin/drone_ws4/mbplanner_ws/src/mbplanner_hmcl/exploration/pci_mav/include/**",
+        "/home/hojin/drone_ws4/mbplanner_ws/src/mbplanner_hmcl/exploration/mbplanner_ros/planner_common/include/**",
+        "/home/hojin/drone_ws4/mbplanner_ws/src/mbplanner_hmcl/exploration/mbplanner_ros/planner_control_interface/include/**",
+        "/home/hojin/drone_ws4/mbplanner_ws/src/mbplanner_hmcl/mapping/volumetric_mapping/volumetric_map_base/include/**",
+        "/home/hojin/drone_ws4/mbplanner_ws/src/mbplanner_hmcl/mapping/voxblox/voxblox/include/**",
+        "/home/hojin/drone_ws4/mbplanner_ws/src/mbplanner_hmcl/mapping/voxblox/voxblox_ros/include/**",
+        "/home/hojin/drone_ws4/mbplanner_ws/src/mbplanner_hmcl/mapping/voxblox/voxblox_rviz_plugin/include/**",
+        "/usr/include/**"
+      ],
+      "name": "ROS"
+    }
+  ],
+  "version": 4
+}
