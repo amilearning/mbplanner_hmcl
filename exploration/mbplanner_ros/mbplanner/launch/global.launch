@@ -18,13 +18,12 @@
   <arg name="voxblox_config_file" default="$(find mbplanner)/config/voxblox_sim_config.yaml"/>
   <arg name="octomap_config_file" default="$(find mbplanner)/config/octomap_sim_config.yaml"/>
   <arg name="map_config_file" default="$(arg voxblox_config_file)"/>
-  <!-- <arg name="world_file" default="$(find planner_gazebo_sim)/worlds/pittsburgh_mine.world"/> -->
-  <!-- <arg name="pci_file" default="$(find mbplanner)/config/planner_control_interface_sim_config.yaml"/> -->
+  
 
   <!-- Global Planner -->
   <node pkg="global_planner" type="global_planner_node" name="global_planner_node" output="screen" launch-prefix="$(arg launch_prefix)">
     <remap from="odometry" to="$(arg odometry_topic)" />
-      <remap from="freespace_pointcloud" to="/camera/depth/color/points" />
+      
     <!-- For Voxblox: -->
     <!-- Use tsdf map topics if tsdf is being used and commnet the esdf topic-->
     <remap from="global_planner_node/tsdf_map_in" to="mbplanner_node/tsdf_map_out"/>

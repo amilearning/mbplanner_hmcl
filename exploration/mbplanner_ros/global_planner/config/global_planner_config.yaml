@@ -7,13 +7,13 @@
 #-------------------------------------------------------------------------------
 RobotParams:
   type:               kAerialRobot
-  size:               [0.5, 0.5, 0.5]
+  size:               [0.7, 0.7, 0.3]
   size_extension_min: [0.0, 0.0, 0.0] # minimum extension allowed to operate.
   size_extension:     [0.0, 0.0, 0.0]
   center_offset:      [0.0, 0.0, 0.0]
   relax_ratio:        0.5
   bound_mode:         kExtendedBound
-  safety_extension:   [0.2, 0.2, 0.5]
+  safety_extension:   [0.1, 0.1, 0.1]
 #-------------------------------------------------------------------------------
 # SENSOR CONFIGURATION
 #  sensor_list: Define a set of sensors relevant to the exploration task.
@@ -25,7 +25,7 @@ SensorParams:
   VLP16:
     type:           kCamera
     max_range:      5.0
-    center_offset:  [0.1, 0.0, 0.1]
+    center_offset:  [0.147, 0.0, -0.068]
     rotations:      [0.0, 0.0, 0.0]
     fov:            [rad(pi/2), rad(pi/3)]
     resolution:     [rad(9.0*pi/180), rad(6.0*pi/180)]
@@ -38,12 +38,12 @@ SensorParams:
 BoundedSpaceParams:
   Global:
     type:           kCuboid
-    min_val:        [-50.0, -50.0, -1.0]
-    max_val:        [50, 50.0, 3.0]
+    min_val:        [-2.5, -2.5, 0.0]
+    max_val:        [2.5, 2.5, 1.3]
   Local:
     type:           kCuboid
-    min_val:        [-8.0, -8.0, -0.5]
-    max_val:        [8.0, 8.0, 0.5]
+    min_val:        [-1.95, -1.7, -0.1]
+    max_val:        [1.75, 1.75, 0.1]
     min_extension:  [-1.0, -1.0, 0.0]
     max_extension:  [1.0, 1.0, 0.0]
 #-------------------------------------------------------------------------------

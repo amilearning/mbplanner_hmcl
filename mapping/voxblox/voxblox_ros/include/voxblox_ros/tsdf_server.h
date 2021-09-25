@@ -124,11 +124,6 @@ class TsdfServer {
   void tsdfMapCallback(const voxblox_msgs::Layer& layer_msg);
 
   Eigen::Affine3d transformTFToAffine3d(const tf::Transform &t);
-  // double horizontal_fov;
-  // double vertical_fov;
-  // double near_plane_dist;
-  // double far_plane_dist;
-  // float leaf_size;
 
  protected:
   /**
@@ -182,7 +177,6 @@ class TsdfServer {
   ros::Timer publish_map_timer_;
 
   bool verbose_;
- 
 
   /**
    * Global/map coordinate frame. Will always look up TF transforms to this

@@ -21,18 +21,18 @@
   <!-- <arg name="world_file" default="$(find planner_gazebo_sim)/worlds/pittsburgh_mine.world"/>
   <arg name="pci_file" default="$(find mbplanner)/config/planner_control_interface_sim_config.yaml"/> -->
 
-  
+  <node name="freespace_throttler" type="throttle" pkg="topic_tools" args="messages /camera/depth/color/points 1 /camera/depth/colot/points_free" />
+
 
 <node pkg="mbplanner" type="mbplanner_node" name="mbplanner_node" output="screen">
     <remap from="odometry" to="$(arg odometry_topic)" />
     <remap from="cam0/camera_info" to="/stereo/left/camera_info" />
     <remap from="cam1/camera_info" to="/stereo/right/camera_info" />
-    <!-- <remap from="freespace_pointcloud" to="/camera/depth/color/points" /> -->
     
-       
-    <!-- /camera_points /camera/depth/points -->
-    <!-- <remap from="pointcloud" to="/velodyne_points" /> -->
+    <remap from="freespace_pointcloud" to="/camera/depth/colot/points_free" />    
     <remap from="pointcloud" to="/camera/depth/color/points" />    
+    
+
     <rosparam command="load" file="$(arg mbplanner_config_file)" />
     <rosparam command="load" file="$(arg map_config_file)" />
   </node>

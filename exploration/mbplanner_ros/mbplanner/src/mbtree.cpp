@@ -194,7 +194,7 @@ bool MBTree::inside_lidar_safe_area(StateNode* sampled_node){
 
   // return false if angle beyond the lidar sensing range
     if(angle_in_local_frame < laser_data.angle_min ||  angle_in_local_frame > laser_data.angle_max){
-      ROS_WARN("sampling over range sensor limit");
+      
       return false;      
     }
 
@@ -206,15 +206,59 @@ bool MBTree::inside_lidar_safe_area(StateNode* sampled_node){
   
   
   if( laser_data.range_min > d1 || d1 > laser_data.range_max){
-    d1 = laser_data.range_max;    
+    d1 = laser_data.range_min;    
   }
   double distance_to_sampled_node = sqrt(pow((current_state_.position(0)-sampled_node->position(0)),2)+pow((current_state_.position(1)-sampled_node->position(1)),2));   
-  if (distance_to_sampled_node > d1 || fabs(d1 - distance_to_sampled_node) < mb_params_.laser_dist){
-    return false;
-  }else{
-    return true;
+  
+  // if (distance_to_sampled_node > d1 || fabs(d1 - distance_to_sampled_node) < mb_params_.laser_dist){
+  //     return false;
+  //     ROS_INFO("sampling ")
+  // }else{
+     ///////////////////////////// check with other neighboring lidar points /////////////////////////////  
+     double ratio_tmp = mb_params_.laser_dist / distance_to_sampled_node;
+     double angle_to_check;
+     if (ratio_tmp < -1 || ratio_tmp > 1){
+       angle_to_check = fabs(laser_data.angle_min);
+     }else{
+       angle_to_check = fabs(asin(ratio_tmp));
+     }
+    
+   
+    int angle_to_check_idx_len = (int)(angle_to_check/laser_data.angle_increment)+5; 
+    int start_idx = idx - angle_to_check_idx_len; 
+    int finish_idx = idx + angle_to_check_idx_len;
+    if (start_idx < 0){
+      start_idx = 0; 
+    }
+    if (finish_idx > laser_data.ranges.size()){
+      finish_idx = laser_data.ranges.size();
+    }    
+    for (int idx_ = start_idx; idx_ <= finish_idx; idx_=idx_+1){      
+      double d_tmp_ = laser_data.range_max;
+  if(isfinite(laser_data.ranges[idx_])){
+     d_tmp_ =laser_data.ranges[idx_] ;  
   }
+  if( laser_data.range_min > d_tmp_ || d_tmp_ > laser_data.range_max){
+    d_tmp_ = laser_data.range_min;    
+  }
+
+      double dist_tmp_  = sqrt(pow(distance_to_sampled_node,2)+pow(d_tmp_,2)
+        -2*distance_to_sampled_node*d_tmp_*cos(fabs(idx-idx_)*laser_data.angle_increment));
+
+      if ( fabs(dist_tmp_) <= mb_params_.laser_dist){        
+       
+         return false;
+        }
+        // else{
+        //   continue;
+        // }            
+    }    
+    ///////////////////////////// ////////////////////////////////////////// /////////////////////////////    
+    return true;
+  // }
+
  
+
   
 }
 
@@ -481,12 +525,12 @@ int MBTree::buildTree(bool prev_point_plan, bool use_current_state, bool use_giv
                               0.5 * mb_params_.dt * mb_params_.dt * a;
           // Is the state within the local and global bounding box:
           if (!inside_global_box(d_state->position)) {
-            ROS_INFO("hit global box");
+            // ROS_INFO("hit global box");
             hit = true;
             break;
           }
           if (!inside_local_box(d_state->position)) {
-            ROS_INFO("hit local box");
+            // ROS_INFO("hit local box");
             hit = true;
             break;
           }
@@ -494,7 +538,7 @@ int MBTree::buildTree(bool prev_point_plan, bool use_current_state, bool use_giv
            //Lidar Collision check 
           if (!inside_lidar_safe_area(d_state)){
             hit = true;
-            ROS_INFO("hit by lidar");
+            // ROS_INFO("hit by lidar");
             break;
           }
            
