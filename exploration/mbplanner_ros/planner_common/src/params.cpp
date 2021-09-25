@@ -811,7 +811,7 @@ bool MBParams::loadParams(std::string ns) {
   ros::param::get(ns + "/yaw_enable", yaw_enable);
   ros::param::get(ns + "/safe_path_samples", safe_path_samples);
   ros::param::get(ns + "/exp_dir", exp_dir);
-  ros::param::get(ns + "/min_path_length", min_path_length);
+  ros::param::get(ns + "/", min_path_length);
   ros::param::get(ns + "/forward_angle", forward_angle);
   ros::param::get(ns + "/x_bias", x_bias);
   ros::param::get(ns + "/second_lvl_samples", second_lvl_samples);

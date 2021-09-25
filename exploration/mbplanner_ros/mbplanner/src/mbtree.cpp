@@ -238,9 +238,7 @@ bool MBTree::inside_lidar_safe_area(StateNode* sampled_node){
   if(isfinite(laser_data.ranges[idx_])){
      d_tmp_ =laser_data.ranges[idx_] ;  
   }
-  if( laser_data.range_min > d_tmp_ || d_tmp_ > laser_data.range_max){
-    d_tmp_ = laser_data.range_min;    
-  }
+  
 
       double dist_tmp_  = sqrt(pow(distance_to_sampled_node,2)+pow(d_tmp_,2)
         -2*distance_to_sampled_node*d_tmp_*cos(fabs(idx-idx_)*laser_data.angle_increment));
@@ -502,6 +500,22 @@ int MBTree::buildTree(bool prev_point_plan, bool use_current_state, bool use_giv
         std::vector<StateNode*> temp_inter_state_tree_;  // This stores the intermediate states
                                                          // of the motion primitive
 
+        // 
+        double min_laser_dist = laser_data.range_max;
+        for (int i=0; i<laser_data.ranges.size();i++){
+            if (min_laser_dist > laser_data.ranges[i] && laser_data.ranges[i] > 0.5){
+              min_laser_dist  = laser_data.ranges[i];
+            }
+        }
+        if( min_laser_dist > 3.0){
+          mb_params_.v_max = 1.0;
+        }
+        else if( min_laser_dist > 1.5 && min_laser_dist <= 3.0){
+          mb_params_.v_max = 0.5;
+        }
+        else if( min_laser_dist <= 1.5){
+           mb_params_.v_max = 0.2;
+        }
         // Calculate the motion primitive for the sampled acceleration
         // Total time duration of the primitive is set by the param t(from the config file)
         // The primitive is divided into steps of time duration dt (set from the config file)
@@ -760,9 +774,9 @@ bool MBTree::evaluateGraph() {
     path = getShortestPath(leaf_vertices_[i], false);
     
     int path_size = path.size();
-    if (path_size > 1) {
-        
     
+    if (path_size > 1) {        
+      
       // At least 2 vertices: root + leaf.
       double path_gain = 0;
       double lambda = mb_params_.path_length_penalty;
@@ -782,8 +796,10 @@ bool MBTree::evaluateGraph() {
       }
       
       /* Min Path Length Check (min 1.0m) */
-      if (path_length <= mb_params_.min_path_length) continue;
-
+      if (path_length <= mb_params_.min_path_length){        
+        continue;
+      } 
+      
       /**** Safety ****/
       float min_obst_distance = 999.99;
       float mean_obst_distance = 0;
@@ -802,7 +818,7 @@ bool MBTree::evaluateGraph() {
       leaf_vertices_[i]->mean_obstacle_dist = mean_obst_distance;
 
       /* Safety Path Calc and Viz */
-      leaf_vertices_[i]->obst_steps = predict_hit((leaf_vertices_[i]));
+      // leaf_vertices_[i]->obst_steps = predict_hit((leaf_vertices_[i]));
       // if (leaf_vertices_[i]->obst_steps < 0)
       //   path_gain = 0.0;
       // else
@@ -833,9 +849,9 @@ bool MBTree::evaluateGraph() {
         best_gain = path_gain;
         best_path_leaf = leaf_vertices_[i];
       }
-
+    
     }  // if(path_size > 1)
-
+    
   }  // loop over all leaves
 
   if (num_leaf_vertices_ == 1) {
